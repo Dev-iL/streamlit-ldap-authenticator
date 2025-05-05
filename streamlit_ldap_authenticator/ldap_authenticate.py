@@ -2,7 +2,8 @@
 # Date      : 04-Apr-2024
 
 
-from typing import Callable, Dict, List, Literal, Optional, Union
+from collections.abc import Callable
+from typing import Literal
 
 from ldap3 import Connection, Server
 from ldap3.abstract.entry import Entry
@@ -21,7 +22,7 @@ class LdapAuthenticate:
 
     config: LdapConfig
 
-    def __init__(self, config: Union[LdapConfig, AttrDict]) -> None:
+    def __init__(self, config: LdapConfig | AttrDict) -> None:
         """Create an instance of `LdapAuthenticate` object
 
         ## Arguments
@@ -34,11 +35,10 @@ class LdapAuthenticate:
         self,
         username: str,
         password: str,
-        getInfo: Callable[[Connection], Optional[UserInfos]],
-        additionalCheck: Optional[
-            Callable[[Optional[Connection], UserInfos], Union[Literal[True], str]]
-        ] = None,
-    ) -> Union[UserInfos, str]:
+        getInfo: Callable[[Connection], UserInfos | None],
+        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
+    ) -> UserInfos | str:
         """Login to active directory
 
         ## Arguments
@@ -95,8 +95,8 @@ class LdapAuthenticate:
     def getInfos(
         self,
         conn: Connection,
-        filters: Union[str, Dict[str, str]],
-    ) -> List[UserInfos]:
+        filters: str | dict[str, str],
+    ) -> list[UserInfos]:
         """Get list of entries information from active directory
 
         ## Arguments
@@ -121,8 +121,8 @@ class LdapAuthenticate:
     def getInfo(
         self,
         conn: Connection,
-        filters: Union[str, Dict[str, str]],
-    ) -> Optional[UserInfos]:
+        filters: str | dict[str, str],
+    ) -> UserInfos | None:
         """Get entry information from active directory
 
         ## Arguments
@@ -145,7 +145,7 @@ class LdapAuthenticate:
         self,
         conn: Connection,
         name: str,
-    ) -> Optional[UserInfos]:
+    ) -> UserInfos | None:
         """Get information from active directory
 
         ## Arguments
@@ -164,7 +164,7 @@ class LdapAuthenticate:
         self,
         conn: Connection,
         name: str,
-    ) -> Optional[UserInfos]:
+    ) -> UserInfos | None:
         """Get information from active directory
 
         ## Arguments
@@ -183,7 +183,7 @@ class LdapAuthenticate:
         self,
         conn: Connection,
         name: str,
-    ) -> Optional[UserInfos]:
+    ) -> UserInfos | None:
         """Get information from active directory
 
         ## Arguments
@@ -219,7 +219,7 @@ class LdapAuthenticate:
             return str(attribute[0])
         return attribute
 
-    def __toInfo(self, entry) -> Optional[UserInfos]:
+    def __toInfo(self, entry) -> UserInfos | None:
         if type(entry) is not Entry:
             return None
         info = {
@@ -227,7 +227,7 @@ class LdapAuthenticate:
         }
         return info
 
-    def __toInfos(self, entries) -> List[UserInfos]:
+    def __toInfos(self, entries) -> list[UserInfos]:
         """Convert entries to user information list"""
         if type(entries) is not list:
             raise TypeError("Expect 'entries' to be list type")
@@ -235,7 +235,7 @@ class LdapAuthenticate:
         infos = [i for i in infos if i is not None]
         return infos
 
-    def __toFilterStr(self, filters: Union[str, Dict[str, str]]) -> str:
+    def __toFilterStr(self, filters: str | dict[str, str]) -> str:
         if type(filters) is str:
             return filters
         if type(filters) is dict:

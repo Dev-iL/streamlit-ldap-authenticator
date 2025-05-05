@@ -2,7 +2,7 @@
 # Date      : 27-Apr-2024
 
 
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Optional, TypeVar, Union
 
 from streamlit.runtime.secrets import AttrDict as _AttrDict
 from streamlit_rsa_auth_ui import (
@@ -23,25 +23,25 @@ from streamlit_rsa_auth_ui.configs import (
 
 class LoginConfig(SigninFormConfig):
     busy_message: str
-    error_icon: Optional[str]
+    error_icon: str | None
 
     def __init__(
         self,
         busy_message: str = "Logging in...",
-        error_icon: Optional[str] = None,
-        formType: Optional[FormType] = None,
-        labelSpan: Optional[int] = None,
-        wrapperSpan: Optional[int] = None,
-        maxWidth: Optional[int] = None,
-        align: Optional[HorizontalAlign] = None,
-        title: Union[TitleConfig, str, Object, None] = None,
-        cancel: Union[IconConfig, Object, None] = None,
-        submit: Union[ButtonConfig, str, Object, None] = None,
-        username: Union[TextInputConfig, str, Object, None] = None,
-        password: Union[TextInputConfig, str, Object, None] = None,
-        remember: Union[CheckboxConfig, str, Object, None] = None,
-        forgot: Union[ButtonConfig, str, Object, None] = None,
-        args: Optional[Object] = None,
+        error_icon: str | None = None,
+        formType: FormType | None = None,
+        labelSpan: int | None = None,
+        wrapperSpan: int | None = None,
+        maxWidth: int | None = None,
+        align: HorizontalAlign | None = None,
+        title: TitleConfig | str | Object | None = None,
+        cancel: IconConfig | Object | None = None,
+        submit: ButtonConfig | str | Object | None = None,
+        username: TextInputConfig | str | Object | None = None,
+        password: TextInputConfig | str | Object | None = None,
+        remember: CheckboxConfig | str | Object | None = None,
+        forgot: ButtonConfig | str | Object | None = None,
+        args: Object | None = None,
     ) -> None:
         super().__init__(
             formType,
@@ -77,15 +77,15 @@ class LogoutConfig(SignoutFormConfig):
         self,
         busy_message: str = "Logging out...",
         sleep_sec: float = 1.0,
-        formType: Optional[FormType] = None,
-        labelSpan: Optional[int] = None,
-        wrapperSpan: Optional[int] = None,
-        maxWidth: Optional[int] = None,
-        align: Optional[HorizontalAlign] = None,
-        title: Union[str, TitleConfig, Object, None] = None,
-        cancel: Union[IconConfig, Object, None] = None,
-        submit: Union[str, ButtonConfig, Object, None] = None,
-        args: Optional[Object] = None,
+        formType: FormType | None = None,
+        labelSpan: int | None = None,
+        wrapperSpan: int | None = None,
+        maxWidth: int | None = None,
+        align: HorizontalAlign | None = None,
+        title: str | TitleConfig | Object | None = None,
+        cancel: IconConfig | Object | None = None,
+        submit: str | ButtonConfig | Object | None = None,
+        args: Object | None = None,
     ) -> None:
         super().__init__(
             formType,
@@ -109,8 +109,8 @@ class LogoutConfig(SignoutFormConfig):
 
 
 # Application Config
-UserInfoValue = Union[List[str], str, None]
-UserInfos = Dict[str, Any]
+UserInfoValue = Union[list[str], str, None]
+UserInfos = dict[str, Any]
 T = TypeVar("T")
 AttrDict = Union[_AttrDict, dict]
 
@@ -121,7 +121,7 @@ class Config:
         cls,
         dict: AttrDict,
         key: str,
-        _type: Union[Type, List[Type]],
+        _type: type | list[type],
         defaultValueIfNone: T,
     ):  # type: ignore
         if key in dict:
@@ -136,7 +136,7 @@ class Config:
         return value
 
     @classmethod
-    def _getAttr(cls, dict: AttrDict, key: str, _type: Type):
+    def _getAttr(cls, dict: AttrDict, key: str, _type: type):
         if key not in dict:
             raise AttributeError(f"'{key}' is not found")
 
@@ -165,7 +165,7 @@ class LdapConfig(Config):
     server_path: str
     domain: str
     search_base: str
-    attributes: List[str]
+    attributes: list[str]
     use_ssl: bool
 
     def __init__(
@@ -173,7 +173,7 @@ class LdapConfig(Config):
         server_path: str,
         domain: str,
         search_base: str,
-        attributes: List[str],
+        attributes: list[str],
         use_ssl: bool = True,
     ):
         """Create an instance of `LdapConfig` object
