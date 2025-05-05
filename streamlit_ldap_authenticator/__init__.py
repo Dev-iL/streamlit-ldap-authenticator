@@ -2,7 +2,14 @@
 # Date      : 23-Mar-2024
 
 
+from .authenticate import Authenticate, RegexDomain, RegexEmail
+from .configs import (
+    CookieConfig,
+    EncryptorConfig,
+    LdapConfig,
+    LoginConfig,
+    LogoutConfig,
+    SessionStateConfig,
+    UserInfos,
+)
 from .ldap_authenticate import Connection, LdapAuthenticate
-from .authenticate import Authenticate, RegexEmail, RegexDomain
-from .configs import LdapConfig, SessionStateConfig, CookieConfig, EncryptorConfig, LoginConfig, LogoutConfig, UserInfos
-
