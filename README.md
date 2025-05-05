@@ -16,8 +16,8 @@ A fast and easy way to handle the user authentication using ldap in your Streaml
 ### Features
 
 - Authentication using active directory.
-- Each page app can have it's own additional user authorization.
-- User login status will share across multi page app by making use of streamlit [Session State](https://docs.streamlit.io/library/api-reference/session-state)
+- Each page app can have its own additional user authorization.
+- User login status will share across multipage app by making use of streamlit [Session State](https://docs.streamlit.io/library/api-reference/session-state)
 - Can configure to remember user login by using cookie in the client's browser.
 
 ![LoginForm](/images/LoginForm.png)
@@ -43,7 +43,7 @@ Require Configuration
 
 - Active directory server path of your organization
 - Your organization domain
-- Avaliable attribute for your organization for person data in active directory. You can use [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer) to explore avaliable attribute for your organization.
+- Available attribute for your organization for person data in active directory. You can use [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer) to explore available attribute for your organization.
 
 If your organization email address is "@example.com", most likely
 your configuration will be as below
@@ -161,7 +161,7 @@ Configuration for your organization active directory
 | server_path | str | Active directory server path. E.g. 'ldap://ldap.example.com'
 | domain | str | Your organization domain. E.g. 'Example'
 | search_base | str | Active directory base search. E.g. 'dc=example, dc=com'
-| attributes | List[str] | Attribute avaliable in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
+| attributes | List[str] | Attribute available in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
 | use_ssl | bool | Determine whether to use basic SSL basic authentication
 
 ### SessionStateConfig
@@ -258,7 +258,7 @@ Configuration for encryption key location to encrypt user information at the cli
 | username    | TextInputConfig \| str \| dict \| None | Config for username input of the form                                                                            |
 | password    | TextInputConfig \| str \| dict \| None | Config for password input of the form                                                                            |
 | remember    | CheckboxConfig \| str \| dict \| None  | Config for remember checkbox of the form                                                                         |
-| args        | dict \| None                           | Optional addtional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
+| args        | dict \| None                           | Optional additional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
 
 ### SignoutFormConfig
 
@@ -269,12 +269,12 @@ Configuration for encryption key location to encrypt user information at the cli
 | align    | 'left' \| 'center' \| 'right' \| None | Horizontal form alignment                                                                                        |
 | title    | TitleConfig \| str \| dict \| None    | Config for title control of the form                                                                             |
 | submit   | ButtonConfig \| str \| dict \| None   | Config for submit button of the form                                                                             |
-| args     | dict \| None                          | Optional addtional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
+| args     | dict \| None                          | Optional additional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
 
 ## Callback Extension
 
-Addtional task can be executed upon successful login or logout\
-Login Process is as follow
+Additional task can be executed upon successful login or logout\
+Login Process is as follows
 
 - Reauthenticate from Session state, if unsuccessful
 - Reauthenticate form cookie, if unsuccessful
@@ -285,7 +285,7 @@ Login Process is as follow
 - Save user info in Session state
 - Save encrypted user info in cookie
 
-Logout Process is as follow
+Logout Process is as follows
 When user click `Sign out` button
 
 - Execute `callback` argument function. If `'cancel'` is return, will not continue
@@ -328,7 +328,7 @@ if user is not None:
 
 ## More Examples
 
-### Addtional check with job title after ldap authentication completed
+### Additional check with job title after ldap authentication completed
 
 Create a new file title_login.py with the following code:
 
@@ -464,7 +464,7 @@ streamlit run list_login.py
 
 ### Version 0.0.6
 
-- fix page application not working when auto renewal for cookie config is configured.
+- fix page application not working when auto-renewal for cookie config is configured.
 
 ### Version 0.1.0
 
@@ -475,7 +475,7 @@ streamlit run list_login.py
 
 ### Version 0.1.1
 
-- Add pyjwt in the install requirement
+- Add pyjwt as a requirement
 
 ### Version 0.2.0
 
@@ -484,7 +484,7 @@ streamlit run list_login.py
 ### Version 0.2.1
 
 - Fix cannot login if encryptor module is provided.
-- Fix cookie auto renewal not working when no additionalCheck parameter is provided.
+- Fix cookie auto-renewal not working when no additionalCheck parameter is provided.
 
 ### Version 0.2.2
 

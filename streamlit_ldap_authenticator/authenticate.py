@@ -43,8 +43,8 @@ RegexEmail = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
 
 class Authenticate:
     """Authentication using active directory.
-        Reauthentication method avaliable
-        * steamlit session_state: Valid for the current session. if the page is refreshed, session_state will reset thus loose stored data for reauthentication.
+        Reauthentication method available
+        * streamlit session_state: Valid for the current session. if the page is refreshed, session_state will reset thus loose stored data for reauthentication.
         * cookie in the client's browser: Valid until the cookie in the browser is expired
 
     ## Properties
@@ -102,7 +102,7 @@ class Authenticate:
 
         ## Returns
         UserInfos | None
-            User information if it is avaliable. otherwise, `None`
+            User information if it is available. otherwise, `None`
         """
         if self.session_configs.user not in st.session_state:
             return None
@@ -199,7 +199,7 @@ class Authenticate:
 
         ## Returns
         UserInfos | None
-            user information if it is avaliable and valid, otherwise `None`
+            user information if it is available and valid, otherwise `None`
         """
         if self.cookie_configs is None:
             return None
@@ -335,7 +335,7 @@ class Authenticate:
         connection: Connection | None
             Optional active directory connection
         additionalCheck: ((connection: Connection | None, user: UserInfos) -> (True | str)) | None
-            * Function to perform addtional authentication check.
+            * Function to perform additional authentication check.
             * Function must return `True` if additional authentication is successful, otherwise must return error message
             * Passing `None` will ignore additional authentication check.
 
@@ -372,14 +372,14 @@ class Authenticate:
 
         ## Arguments
         additionalCheck: ((connection: Connection | None, user: UserInfos) -> (True | str)) | None
-            * Function to perform addtional authentication check.
+            * Function to perform additional authentication check.
             * Function must return `True` if additional authentication is successful, otherwise must return error message
             * Passing `None` will ignore additional authentication check.
 
         getLoginUserName: ((username: str) -> str) | None
             Optional function to decode the username entered by user to active directory login username
 
-        getInfo: ((conneciton: Connection, username: str) -> UserInfos | None) | None
+        getInfo: ((connection: Connection, username: str) -> UserInfos | None) | None
             Optional function to retrieve user information from active directory
 
         config: Object | LoginConfig | None
@@ -459,7 +459,7 @@ class Authenticate:
     ) -> None:
         """Create logout form
         config: Object | LogoutConfig | None
-            Opitonal config for logout form
+            Optional config for logout form
 
         callback: ((user: UserInfos | str) -> str | None) | None
             Optional callback function.

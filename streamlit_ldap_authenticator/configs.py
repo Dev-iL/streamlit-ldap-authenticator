@@ -157,7 +157,7 @@ class LdapConfig(Config):
     search_base: str
         Active Directory base search. E.g. 'dc=example,dc=com'
     attributes: List[str]
-        Attribute avaliable in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
+        Attribute available in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
     use_ssl: bool
         Determine whether to use basic SSL basic authentication. Default value is `True`
     """
@@ -186,7 +186,7 @@ class LdapConfig(Config):
         search_base: str
             Active Directory base search. E.g. 'dc=example,dc=com'
         attributes: List[str]
-            Attribute avaliable in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
+            Attribute available in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
         """
         self.server_path = server_path
         self.domain = domain
@@ -209,7 +209,7 @@ class LdapConfig(Config):
             return value
         if type(value) is dict or type(value) is _AttrDict:
             return cls.from_dict(value)
-        raise AttributeError("Unpected 'value' type")
+        raise AttributeError("Unexpected 'value' type")
 
 
 class SessionStateConfig(Config):
@@ -272,7 +272,7 @@ class SessionStateConfig(Config):
 
 
 class CookieConfig(Config):
-    """Secrects to encode information to cookie in the client's browser
+    """Secrets to encode information to cookie in the client's browser
 
     ## Properties
     key: str
