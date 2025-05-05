@@ -4,11 +4,13 @@
 
 import re
 import time
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Callable, Literal, Optional, Union
+from typing import Literal
 
 import jwt
 import streamlit as st
+from streamlit.elements.lib.utils import StreamlitDuplicateElementKey
 from streamlit_cookies_controller import CookieController
 from streamlit_rsa_auth_ui import (
     Encryptor,
@@ -55,14 +57,14 @@ class Authenticate:
     """
 
     session_configs: SessionStateConfig
-    cookie_configs: Optional[CookieConfig]
+    cookie_configs: CookieConfig | None
 
     def __init__(
         self,
-        ldap_configs: Union[LdapConfig, AttrDict],
-        session_configs: Union[SessionStateConfig, AttrDict, None] = None,
-        cookie_configs: Union[CookieConfig, AttrDict, None] = None,
-        encryptor_configs: Union[EncryptorConfig, AttrDict, None] = None,
+        ldap_configs: LdapConfig | AttrDict,
+        session_configs: SessionStateConfig | AttrDict | None = None,
+        cookie_configs: CookieConfig | AttrDict | None = None,
+        encryptor_configs: EncryptorConfig | AttrDict | None = None,
     ):
         """Create a new instance of `Authenticate`
 
@@ -94,7 +96,7 @@ class Authenticate:
         self.ui = authUI(self.session_configs.auth_result, publicKey)
 
     # streamlit session_state variables
-    def __getUser(self) -> Optional[UserInfos]:
+    def __getUser(self) -> UserInfos | None:
         """Get the user information from streamlit session_state
             if reauthorization using streamlit session_state is enabled
 
@@ -107,7 +109,7 @@ class Authenticate:
         user = st.session_state[self.session_configs.user]
         return user if type(user) is dict else None
 
-    def __setUser(self, user: Optional[UserInfos]):
+    def __setUser(self, user: UserInfos | None):
         """Assign the user information to session_state of streamlit
             if reauthorization using streamlit session_state is enabled
 
@@ -150,7 +152,7 @@ class Authenticate:
             algorithm="HS256",
         )
 
-    def __tokenDecode(self, cookie_configs: CookieConfig, token) -> Optional[UserInfos]:
+    def __tokenDecode(self, cookie_configs: CookieConfig, token) -> UserInfos | None:
         """Decodes the contents of the reauthentication cookie.
 
         ## Arguments:
@@ -191,7 +193,7 @@ class Authenticate:
             print(f"Token decode error: {e}")
             return None
 
-    def __getCookie(self) -> Optional[UserInfos]:
+    def __getCookie(self) -> UserInfos | None:
         """Get the decoded user information from cookie in the client's browser.
             if reauthorization using cookie in the client's browser is enabled
 
@@ -205,7 +207,7 @@ class Authenticate:
         token = self.cookie_manager.get(self.cookie_configs.name)
         return self.__tokenDecode(self.cookie_configs, token)
 
-    def __setCookie(self, user: Optional[UserInfos]):
+    def __setCookie(self, user: UserInfos | None):
         """Assign the encoded user information to cookie in the client's browser
             if reauthorization using cookie in the client's browser is enabled
 
@@ -239,7 +241,7 @@ class Authenticate:
             self.cookie_manager.remove(self.cookie_configs.name)
             time.sleep(self.cookie_configs.delay_sec)
 
-    def __getLoginConfig(self, config: Union[Object, LoginConfig, None] = None):
+    def __getLoginConfig(self, config: Object | LoginConfig | None = None):
         config = (
             config
             if type(config) is dict
@@ -265,13 +267,12 @@ class Authenticate:
 
     def __createLoginForm(
         self,
-        additionalCheck: Optional[
-            Callable[[Optional[Connection], UserInfos], Union[Literal[True], str]]
-        ] = None,
-        getLoginUserName: Optional[Callable[[str], str]] = None,
-        getInfo: Optional[Callable[[Connection, str], Optional[UserInfos]]] = None,
-        config: Union[Object, LoginConfig, None] = None,
-        callback: Optional[Callable[[Union[UserInfos, str]], Optional[str]]] = None,
+        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
+        getLoginUserName: Callable[[str], str] | None = None,
+        getInfo: Callable[[Connection, str], UserInfos | None] | None = None,
+        config: Object | LoginConfig | None = None,
+        callback: Callable[[UserInfos | str], str | None] | None = None,
     ):
         getInfo = getInfo if getInfo is not None else self.getInfo
         getLoginUserName = (
@@ -322,10 +323,9 @@ class Authenticate:
 
     def __checkReauthentication(
         self,
-        user: Optional[UserInfos],
-        additionalCheck: Optional[
-            Callable[[Optional[Connection], UserInfos], Union[Literal[True], str]]
-        ] = None,
+        user: UserInfos | None,
+        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
     ):
         """Check user information during reauthorization
 
@@ -361,14 +361,13 @@ class Authenticate:
 
     def login(
         self,
-        additionalCheck: Optional[
-            Callable[[Optional[Connection], UserInfos], Union[Literal[True], str]]
-        ] = None,
-        getLoginUserName: Optional[Callable[[str], str]] = None,
-        getInfo: Optional[Callable[[Connection, str], Optional[UserInfos]]] = None,
-        config: Union[Object, LoginConfig, None] = None,
-        callback: Optional[Callable[[Union[UserInfos, str]], Optional[str]]] = None,
-    ) -> Optional[UserInfos]:
+        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
+        getLoginUserName: Callable[[str], str] | None = None,
+        getInfo: Callable[[Connection, str], UserInfos | None] | None = None,
+        config: Object | LoginConfig | None = None,
+        callback: Callable[[UserInfos | str], str | None] | None = None,
+    ) -> UserInfos | None:
         """Authentication using ldap. Reauthorize if it is valid and create login form if authorization fail.
 
         ## Arguments
@@ -425,7 +424,7 @@ class Authenticate:
         finally:
             st.rerun()
 
-    def __getLogoutConfig(self, config: Union[Object, LogoutConfig, None] = None):
+    def __getLogoutConfig(self, config: Object | LogoutConfig | None = None):
         config = (
             config
             if type(config) is dict
@@ -455,10 +454,8 @@ class Authenticate:
 
     def createLogoutForm(
         self,
-        config: Union[Object, LogoutConfig, None] = None,
-        callback: Optional[
-            Callable[[SignoutEvent], Optional[Literal["cancel"]]]
-        ] = None,
+        config: Object | LogoutConfig | None = None,
+        callback: Callable[[SignoutEvent], Literal["cancel"] | None] | None = None,
     ) -> None:
         """Create logout form
         config: Object | LogoutConfig | None
@@ -495,7 +492,7 @@ class Authenticate:
             st.rerun()
 
     # Default decoding of login user name and get user information from active directory
-    def getInfo(self, conn: Connection, username: str) -> Optional[UserInfos]:
+    def getInfo(self, conn: Connection, username: str) -> UserInfos | None:
         match = RegexEmail.match(username)
         if match is not None:
             return self.ldap_auth.getInfoByUserPrincipalName(conn, username)
