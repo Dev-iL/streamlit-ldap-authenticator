@@ -10,6 +10,7 @@ from typing import Literal
 
 import jwt
 import streamlit as st
+from streamlit.elements.lib.utils import StreamlitDuplicateElementKey
 from streamlit_cookies_controller import CookieController
 from streamlit_rsa_auth_ui import (
     Encryptor,
@@ -401,6 +402,10 @@ class Authenticate:
             return user
 
         # check user authentication if it is found cookie in client's browser
+        try:
+            self.cookie_manager.refresh()
+        except StreamlitDuplicateElementKey:
+            time.sleep(0.1)
         user = self.__get_cookie()
         if self.__check_reauthentication(user, additional_check):
             self.__set_user(user)
@@ -417,6 +422,10 @@ class Authenticate:
         if type(user) is not dict:
             return None
         self.__set_user(user)
+        try:
+            self.cookie_manager.refresh()
+        except StreamlitDuplicateElementKey:
+            time.sleep(0.1)
         self.__set_cookie(user)
         try:
             return user
