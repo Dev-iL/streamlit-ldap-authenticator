@@ -43,13 +43,13 @@ class LdapAuthenticate:
 
         ## Arguments
         userName: str
-            user name to login to active directory
+            username to log in to active directory
         password: str
-            password to login to active directory
-        getInfo: (conneciton: Connection) -> UserInfos | None
+            password to log in to active directory
+        getInfo: (connection: Connection) -> UserInfos | None
             Function to retrieve user information from active directory
         additionalCheck: ((connection: Connection | None, user: UserInfos) -> (True | str)) | None
-            * Function to perform addtional authentication check.
+            * Function to perform additional authentication check.
             * Function must return `True` if additional authentication is successful, otherwise must return error message
             * Passing `None` will ignore additional authentication check.
 
@@ -108,7 +108,7 @@ class LdapAuthenticate:
 
         ## Returns
         UserInfos | None
-            User information if avaliable. otherwise, `None`
+            User information if available. otherwise, `None`
         """
         conn.search(
             search_base=self.config.search_base,
@@ -134,7 +134,7 @@ class LdapAuthenticate:
 
         ## Returns
         UserInfos | None
-            User information if avaliable. otherwise, `None`
+            User information if available. otherwise, `None`
         """
         infos = self.getInfos(conn, filters)
         if len(infos) < 1:
@@ -156,7 +156,7 @@ class LdapAuthenticate:
 
         ## Returns
         UserInfos | None
-            User information if avaliable. otherwise, `None`
+            User information if available. otherwise, `None`
         """
         return self.getInfo(conn, {"sAMAccountName": name})
 
@@ -175,7 +175,7 @@ class LdapAuthenticate:
 
         ## Returns
         UserInfos | None
-            User information if avaliable. otherwise, `None`
+            User information if available. otherwise, `None`
         """
         return self.getInfo(conn, {"userPrincipalName": name})
 
@@ -194,7 +194,7 @@ class LdapAuthenticate:
 
         ## Returns
         UserInfos | None
-            User information if avaliable. otherwise, `None`
+            User information if available. otherwise, `None`
         """
         return self.getInfo(conn, {"distinguishedName": name})
 
