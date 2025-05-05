@@ -5,12 +5,11 @@
 import re
 import time
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import jwt
 import streamlit as st
-from streamlit.elements.lib.utils import StreamlitDuplicateElementKey
 from streamlit_cookies_controller import CookieController
 from streamlit_rsa_auth_ui import (
     Encryptor,
@@ -38,7 +37,7 @@ ss = st.session_state
 
 
 RegexDomain = re.compile(r"^(.*)\\(.*)$")
-RegexEmail = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
+RegexEmail = re.compile(r"^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$")
 
 
 class Authenticate:
@@ -79,24 +78,24 @@ class Authenticate:
             Optional configuration to encode user information to cookie in the client's browser.
             Reauthorization using cookie in the client's browser feature will be disabled when `None`.
         """
-        self.session_configs = SessionStateConfig.getInstance(session_configs)
-        self.cookie_configs = CookieConfig.getInstance(cookie_configs)
+        self.session_configs = SessionStateConfig.get_instance(session_configs)
+        self.cookie_configs = CookieConfig.get_instance(cookie_configs)
         self.ldap_auth = LdapAuthenticate(ldap_configs)
 
         if cookie_configs is not None:
             self.cookie_manager = CookieController()
 
-        encryptor_configs = EncryptorConfig.getInstance(encryptor_configs)
+        encryptor_configs = EncryptorConfig.get_instance(encryptor_configs)
         self.encryptor = (
-            Encryptor.load(encryptor_configs.folderPath, encryptor_configs.keyName)
+            Encryptor.load(encryptor_configs.folder_path, encryptor_configs.key_name)
             if encryptor_configs is not None
             else None
         )
-        publicKey = None if self.encryptor is None else self.encryptor.publicKeyPem
-        self.ui = authUI(self.session_configs.auth_result, publicKey)
+        public_key = None if self.encryptor is None else self.encryptor.publicKeyPem
+        self.ui = authUI(self.session_configs.auth_result, public_key)
 
     # streamlit session_state variables
-    def __getUser(self) -> UserInfos | None:
+    def __get_user(self) -> UserInfos | None:
         """Get the user information from streamlit session_state
             if reauthorization using streamlit session_state is enabled
 
@@ -109,7 +108,7 @@ class Authenticate:
         user = st.session_state[self.session_configs.user]
         return user if type(user) is dict else None
 
-    def __setUser(self, user: UserInfos | None):
+    def __set_user(self, user: UserInfos | None):
         """Assign the user information to session_state of streamlit
             if reauthorization using streamlit session_state is enabled
 
@@ -121,20 +120,21 @@ class Authenticate:
             return
         st.session_state[self.session_configs.user] = user
 
-    def __setRememberMe(self, remember_me: bool):
+    def __set_remember_me(self, remember_me: bool):
         st.session_state[self.session_configs.remember_me] = remember_me
 
-    def __getRememberMe(self) -> bool:
+    def __get_remember_me(self) -> bool:
         if self.session_configs.remember_me in st.session_state:
             remember_me = st.session_state[self.session_configs.remember_me]
             if type(remember_me) is bool:
                 return remember_me
 
-        self.__setRememberMe(True)
+        self.__set_remember_me(True)
         return True
 
     # For reauthentication using cookie from client's browser
-    def __tokenEncode(self, cookie_configs: CookieConfig, user: UserInfos):
+    @staticmethod
+    def __token_encode(cookie_configs: CookieConfig, user: UserInfos):
         """Encodes the contents for the reauthentication cookie.
 
         ## Arguments
@@ -145,14 +145,15 @@ class Authenticate:
         str
             The JWT cookie for passwordless reauthentication.
         """
-        exp_date = datetime.utcnow() + timedelta(days=cookie_configs.expiry_days)
+        exp_date = datetime.now(tz=timezone.utc) + timedelta(days=cookie_configs.expiry_days)
         return jwt.encode(
             {"user": user, "exp_date": exp_date.timestamp()},
             cookie_configs.key,
             algorithm="HS256",
         )
 
-    def __tokenDecode(self, cookie_configs: CookieConfig, token) -> UserInfos | None:
+    @staticmethod
+    def __token_decode(cookie_configs: CookieConfig, token) -> UserInfos | None:
         """Decodes the contents of the reauthentication cookie.
 
         ## Arguments:
@@ -179,7 +180,7 @@ class Authenticate:
             exp_date = value["exp_date"]
             if type(exp_date) is not float:
                 raise CookieError("exp_date is not float")
-            if exp_date < datetime.utcnow().timestamp():
+            if exp_date < datetime.now(tz=timezone.utc).timestamp():
                 raise CookieError("Cookie expired")
 
             if "user" not in value:
@@ -193,7 +194,7 @@ class Authenticate:
             print(f"Token decode error: {e}")
             return None
 
-    def __getCookie(self) -> UserInfos | None:
+    def __get_cookie(self) -> UserInfos | None:
         """Get the decoded user information from cookie in the client's browser.
             if reauthorization using cookie in the client's browser is enabled
 
@@ -205,9 +206,9 @@ class Authenticate:
             return None
 
         token = self.cookie_manager.get(self.cookie_configs.name)
-        return self.__tokenDecode(self.cookie_configs, token)
+        return self.__token_decode(self.cookie_configs, token)
 
-    def __setCookie(self, user: UserInfos | None):
+    def __set_cookie(self, user: UserInfos | None):
         """Assign the encoded user information to cookie in the client's browser
             if reauthorization using cookie in the client's browser is enabled
 
@@ -220,16 +221,16 @@ class Authenticate:
         if self.cookie_configs is None:
             return
 
-        remember_me = self.__getRememberMe()
+        remember_me = self.__get_remember_me()
         if not remember_me:
             return
 
-        token = self.__tokenEncode(self.cookie_configs, user)
+        token = self.__token_encode(self.cookie_configs, user)
         exp_date = datetime.now() + timedelta(days=self.cookie_configs.expiry_days)
         self.cookie_manager.set(self.cookie_configs.name, token, expires=exp_date)
         time.sleep(self.cookie_configs.delay_sec)
 
-    def __deleteCookie(self):
+    def __delete_cookie(self):
         """Delete the cookie in the client's browser
         if reauthorization using cookie in the client's browser is enabled
         """
@@ -241,7 +242,7 @@ class Authenticate:
             self.cookie_manager.remove(self.cookie_configs.name)
             time.sleep(self.cookie_configs.delay_sec)
 
-    def __getLoginConfig(self, config: Object | LoginConfig | None = None):
+    def __get_login_config(self, config: Object | LoginConfig | None = None):
         config = (
             config
             if type(config) is dict
@@ -263,27 +264,26 @@ class Authenticate:
         if type(error_icon) is not str:
             error_icon = None
 
-        return (config, busy_message, error_icon)
+        return config, busy_message, error_icon
 
-    def __createLoginForm(
+    def __create_login_form(
         self,
-        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
-        | None = None,
-        getLoginUserName: Callable[[str], str] | None = None,
-        getInfo: Callable[[Connection, str], UserInfos | None] | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+        get_login_user_name: Callable[[str], str] | None = None,
+        get_info: Callable[[Connection, str], UserInfos | None] | None = None,
         config: Object | LoginConfig | None = None,
         callback: Callable[[UserInfos | str], str | None] | None = None,
     ):
-        getInfo = getInfo if getInfo is not None else self.getInfo
-        getLoginUserName = (
-            getLoginUserName if getLoginUserName is not None else self.getLoginUserName
+        get_info = get_info if get_info is not None else self.get_info
+        get_login_user_name = (
+            get_login_user_name if get_login_user_name is not None else self.get_login_user_name
         )
         default = (
-            {"remember": self.__getRememberMe()}
+            {"remember": self.__get_remember_me()}
             if self.cookie_configs is not None
             else None
         )
-        (config, busy_message, error_icon) = self.__getLoginConfig(config)
+        (config, busy_message, error_icon) = self.__get_login_config(config)
 
         # Create form
         result = self.ui.signinForm(default, config)
@@ -296,36 +296,36 @@ class Authenticate:
         if type(event) is not SigninEvent:
             return None
 
-        self.__setRememberMe(event.remember)
+        self.__set_remember_me(event.remember)
 
         with st.spinner(busy_message):
             username = event.username
-            login_name = getLoginUserName(username)
+            login_name = get_login_user_name(username)
             result = self.ldap_auth.login(
                 login_name,
                 event.password,
-                lambda conn: getInfo(conn, username),
-                additionalCheck,
+                lambda conn: get_info(conn, username),
+                additional_check,
             )
 
             if callback is not None:
-                callbackResult = callback(result)
-                if type(callbackResult) is str:
-                    result = callbackResult
+                callback_result = callback(result)
+                if type(callback_result) is str:
+                    result = callback_result
 
             if type(result) is str:  # If it is error message
                 st.error(result, icon=error_icon)
-            elif type(result) is dict:
+                return None
+            if type(result) is dict:
                 del ss[self.session_configs.auth_result]
                 return result
-            else:
-                st.error(f"Unexpected Return: {result}", icon=error_icon)
+            st.error(f"Unexpected Return: {result}", icon=error_icon)
+            return None
 
-    def __checkReauthentication(
+    def __check_reauthentication(
         self,
         user: UserInfos | None,
-        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
-        | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
     ):
         """Check user information during reauthorization
 
@@ -347,24 +347,23 @@ class Authenticate:
         """
         if type(user) is not dict:
             return False
-        if additionalCheck is None:
+        if additional_check is None:
             if self.cookie_configs is not None and self.cookie_configs.auto_renewal:
-                self.__setCookie(user)
+                self.__set_cookie(user)
             return True  # No additional check is required
-        result = additionalCheck(None, user)
-        if result != True:
+        result = additional_check(None, user)
+        if not result:
             return False
 
         if self.cookie_configs is not None and self.cookie_configs.auto_renewal:
-            self.__setCookie(user)
+            self.__set_cookie(user)
         return True
 
     def login(
         self,
-        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
-        | None = None,
-        getLoginUserName: Callable[[str], str] | None = None,
-        getInfo: Callable[[Connection, str], UserInfos | None] | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+        get_login_user_name: Callable[[str], str] | None = None,
+        get_info: Callable[[Connection, str], UserInfos | None] | None = None,
         config: Object | LoginConfig | None = None,
         callback: Callable[[UserInfos | str], str | None] | None = None,
     ) -> UserInfos | None:
@@ -397,34 +396,35 @@ class Authenticate:
             otherwise, `None`
         """
         # check user authentication if it is found in streamlit session_state
-        user = self.__getUser()
-        if self.__checkReauthentication(user, additionalCheck):
+        user = self.__get_user()
+        if self.__check_reauthentication(user, additional_check):
             return user
 
         # check user authentication if it is found cookie in client's browser
-        user = self.__getCookie()
-        if self.__checkReauthentication(user, additionalCheck):
-            self.__setUser(user)
+        user = self.__get_cookie()
+        if self.__check_reauthentication(user, additional_check):
+            self.__set_user(user)
             return user
 
         # ask user to log in
-        user = self.__createLoginForm(
-            additionalCheck,
-            getLoginUserName,
-            getInfo,
+        user = self.__create_login_form(
+            additional_check,
+            get_login_user_name,
+            get_info,
             config,
             callback,
         )
         if type(user) is not dict:
             return None
-        self.__setUser(user)
-        self.__setCookie(user)
+        self.__set_user(user)
+        self.__set_cookie(user)
         try:
             return user
         finally:
             st.rerun()
 
-    def __getLogoutConfig(self, config: Object | LogoutConfig | None = None):
+    @staticmethod
+    def __get_logout_config(config: Object | LogoutConfig | None = None):
         config = (
             config
             if type(config) is dict
@@ -450,9 +450,9 @@ class Authenticate:
         if type(sleep_sec) is not float:
             sleep_sec = 1.0
 
-        return (config, busy_message, sleep_sec)
+        return config, busy_message, sleep_sec
 
-    def createLogoutForm(
+    def create_logout_form(
         self,
         config: Object | LogoutConfig | None = None,
         callback: Callable[[SignoutEvent], Literal["cancel"] | None] | None = None,
@@ -466,7 +466,7 @@ class Authenticate:
             - Return `'cancel'` will stop the logout process.
             - Return `None` will continue logout process.
         """
-        (config, busy_message, sleep_sec) = self.__getLogoutConfig(config)
+        (config, busy_message, sleep_sec) = self.__get_logout_config(config)
 
         # Create form
         result = self.ui.signoutForm(configs=config)
@@ -485,24 +485,24 @@ class Authenticate:
                 if result == "cancel":
                     return
 
-            self.__setUser(None)
-            self.__deleteCookie()
+            self.__set_user(None)
+            self.__delete_cookie()
             # give sometime for the browser cookie to get deleted
             time.sleep(sleep_sec)
             st.rerun()
 
-    # Default decoding of login user name and get user information from active directory
-    def getInfo(self, conn: Connection, username: str) -> UserInfos | None:
+    # Default decoding of login username and get user information from active directory
+    def get_info(self, conn: Connection, username: str) -> UserInfos | None:
         match = RegexEmail.match(username)
         if match is not None:
-            return self.ldap_auth.getInfoByUserPrincipalName(conn, username)
+            return self.ldap_auth.get_info_by_user_principal_name(conn, username)
 
         match = RegexDomain.match(username)
         groups = match.groups() if match is not None else None
         name = username if groups is None else groups[1]
-        return self.ldap_auth.getInfoBySamAccountName(conn, name)
+        return self.ldap_auth.get_info_by_sam_account_name(conn, name)
 
-    def getLoginUserName(self, username: str) -> str:
+    def get_login_user_name(self, username: str) -> str:
         match = RegexEmail.match(username)
         if match is not None:
             return username

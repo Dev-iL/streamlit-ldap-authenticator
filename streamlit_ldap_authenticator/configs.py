@@ -29,10 +29,10 @@ class LoginConfig(SigninFormConfig):
         self,
         busy_message: str = "Logging in...",
         error_icon: str | None = None,
-        formType: FormType | None = None,
-        labelSpan: int | None = None,
-        wrapperSpan: int | None = None,
-        maxWidth: int | None = None,
+        form_type: FormType | None = None,
+        label_span: int | None = None,
+        wrapper_span: int | None = None,
+        max_width: int | None = None,
         align: HorizontalAlign | None = None,
         title: TitleConfig | str | Object | None = None,
         cancel: IconConfig | Object | None = None,
@@ -44,10 +44,10 @@ class LoginConfig(SigninFormConfig):
         args: Object | None = None,
     ) -> None:
         super().__init__(
-            formType,
-            labelSpan,
-            wrapperSpan,
-            maxWidth,
+            form_type,
+            label_span,
+            wrapper_span,
+            max_width,
             align,
             title,
             cancel,
@@ -77,10 +77,10 @@ class LogoutConfig(SignoutFormConfig):
         self,
         busy_message: str = "Logging out...",
         sleep_sec: float = 1.0,
-        formType: FormType | None = None,
-        labelSpan: int | None = None,
-        wrapperSpan: int | None = None,
-        maxWidth: int | None = None,
+        form_type: FormType | None = None,
+        label_span: int | None = None,
+        wrapper_span: int | None = None,
+        max_width: int | None = None,
         align: HorizontalAlign | None = None,
         title: str | TitleConfig | Object | None = None,
         cancel: IconConfig | Object | None = None,
@@ -88,10 +88,10 @@ class LogoutConfig(SignoutFormConfig):
         args: Object | None = None,
     ) -> None:
         super().__init__(
-            formType,
-            labelSpan,
-            wrapperSpan,
-            maxWidth,
+            form_type,
+            label_span,
+            wrapper_span,
+            max_width,
             align,
             title,
             cancel,
@@ -117,30 +117,30 @@ AttrDict = Union[_AttrDict, dict]
 
 class Config:
     @classmethod
-    def _getAttrWithDefault(
+    def _get_attr_with_default(
         cls,
-        dict: AttrDict,
+        dict_: AttrDict,
         key: str,
-        _type: type | list[type],
-        defaultValueIfNone: T,
+        type_: type | list[type],
+        default_value_if_none: T,
     ):  # type: ignore
-        if key in dict:
-            value = dict[key]
-            if type(_type) is list:
-                if not any([type(value) is t for t in _type]):
+        if key in dict_:
+            value = dict_[key]
+            if type(type_) is list:
+                if not any([type(value) is t for t in type_]):
                     raise ValueError(f"'{value}' is not a valid {key}")
-            elif type(value) is not _type:
+            elif type(value) is not type_:
                 raise ValueError(f"'{value}' is not a valid {key}")
         else:
-            value = defaultValueIfNone
+            value = default_value_if_none
         return value
 
     @classmethod
-    def _getAttr(cls, dict: AttrDict, key: str, _type: type):
-        if key not in dict:
+    def _get_attr(cls, dict_: AttrDict, key: str, _type: type):
+        if key not in dict_:
             raise AttributeError(f"'{key}' is not found")
 
-        value = dict[key]
+        value = dict_[key]
         if type(value) is not _type:
             raise AttributeError(f"'{key}' is not {_type.__name__}")
         return value
@@ -195,16 +195,16 @@ class LdapConfig(Config):
         self.use_ssl = use_ssl
 
     @classmethod
-    def from_dict(cls, dict: AttrDict) -> "LdapConfig":
-        server_path = cls._getAttr(dict, "server_path", str)
-        domain = cls._getAttr(dict, "domain", str)
-        search_base = cls._getAttr(dict, "search_base", str)
-        attributes = cls._getAttr(dict, "attributes", list)
-        use_ssl = cls._getAttrWithDefault(dict, "use_ssl", bool, True)
+    def from_dict(cls, dict_: AttrDict) -> "LdapConfig":
+        server_path = cls._get_attr(dict_, "server_path", str)
+        domain = cls._get_attr(dict_, "domain", str)
+        search_base = cls._get_attr(dict_, "search_base", str)
+        attributes = cls._get_attr(dict_, "attributes", list)
+        use_ssl = cls._get_attr_with_default(dict_, "use_ssl", bool, True)
         return LdapConfig(server_path, domain, search_base, attributes, use_ssl)
 
     @classmethod
-    def getInstance(cls, value: Union["LdapConfig", AttrDict]) -> "LdapConfig":
+    def get_instance(cls, value: Union["LdapConfig", AttrDict]) -> "LdapConfig":
         if type(value) is LdapConfig:
             return value
         if type(value) is dict or type(value) is _AttrDict:
@@ -242,16 +242,16 @@ class SessionStateConfig(Config):
         self.auth_result = auth_result
 
     @classmethod
-    def from_dict(cls, dict: AttrDict) -> "SessionStateConfig":
-        user = cls._getAttrWithDefault(dict, "user", str, cls.__default_user__)
-        remember_me = cls._getAttrWithDefault(
-            dict,
+    def from_dict(cls, dict_: AttrDict) -> "SessionStateConfig":
+        user = cls._get_attr_with_default(dict_, "user", str, cls.__default_user__)
+        remember_me = cls._get_attr_with_default(
+            dict_,
             "remember_me",
             str,
             cls.__default_remember_me__,
         )
-        auth_result = cls._getAttrWithDefault(
-            dict,
+        auth_result = cls._get_attr_with_default(
+            dict_,
             "auth_result",
             str,
             cls.__default_auth_result__,
@@ -260,7 +260,7 @@ class SessionStateConfig(Config):
         return SessionStateConfig(user, remember_me, auth_result)
 
     @classmethod
-    def getInstance(
+    def get_instance(
         cls,
         value: Union["SessionStateConfig", AttrDict, None],
     ) -> "SessionStateConfig":
@@ -310,26 +310,26 @@ class CookieConfig(Config):
         self.delay_sec = delay_sec
 
     @classmethod
-    def from_dict(cls, dict: AttrDict) -> "CookieConfig":
-        key = cls._getAttr(dict, "key", str)
-        name = cls._getAttrWithDefault(dict, "name", str, cls.__default_name__)
+    def from_dict(cls, dict_: AttrDict) -> "CookieConfig":
+        key = cls._get_attr(dict_, "key", str)
+        name = cls._get_attr_with_default(dict_, "name", str, cls.__default_name__)
         expiry_days = float(
-            cls._getAttrWithDefault(
-                dict,
+            cls._get_attr_with_default(
+                dict_,
                 "expiry_days",
                 [float, int],
                 cls.__default_expiry_days__,
             ),
         )
-        auto_renewal = cls._getAttrWithDefault(
-            dict,
+        auto_renewal = cls._get_attr_with_default(
+            dict_,
             "auto_renewal",
             bool,
             cls.__default_auto_renewal__,
         )
         delay_sec = float(
-            cls._getAttrWithDefault(
-                dict,
+            cls._get_attr_with_default(
+                dict_,
                 "delay_sec",
                 [float, int],
                 cls.__default_delay_sec__,
@@ -338,7 +338,7 @@ class CookieConfig(Config):
         return CookieConfig(key, name, expiry_days, auto_renewal, delay_sec)
 
     @classmethod
-    def getInstance(
+    def get_instance(
         cls,
         value: Union["CookieConfig", AttrDict, None],
     ) -> Optional["CookieConfig"]:
@@ -359,21 +359,21 @@ class EncryptorConfig(Config):
         The name of the key
     """
 
-    folderPath: str
-    keyName: str
+    folder_path: str
+    key_name: str
 
-    def __init__(self, folderPath: str, keyName: str) -> None:
-        self.folderPath = folderPath
-        self.keyName = keyName
-
-    @classmethod
-    def from_dict(cls, dict: AttrDict) -> "EncryptorConfig":
-        folderPath = cls._getAttr(dict, "folderPath", str)
-        keyName = cls._getAttr(dict, "keyName", str)
-        return EncryptorConfig(folderPath, keyName)
+    def __init__(self, folder_path: str, key_name: str) -> None:
+        self.folder_path = folder_path
+        self.key_name = key_name
 
     @classmethod
-    def getInstance(
+    def from_dict(cls, dict_: AttrDict) -> "EncryptorConfig":
+        folder_path = cls._get_attr(dict_, "folder_path", str)
+        key_name = cls._get_attr(dict_, "key_name", str)
+        return EncryptorConfig(folder_path, key_name)
+
+    @classmethod
+    def get_instance(
         cls,
         value: Union["EncryptorConfig", AttrDict, None],
     ) -> Optional["EncryptorConfig"]:

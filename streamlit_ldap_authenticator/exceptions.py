@@ -15,7 +15,7 @@ class DeprecationError(Exception):
         super().__init__(self.message)
 
 
-class AdAttributeError(Exception):
+class ActiveDirectoryAttributeError(Exception):
     """Exceptions raised for Active Directory attribute error.
 
     ## Attributes

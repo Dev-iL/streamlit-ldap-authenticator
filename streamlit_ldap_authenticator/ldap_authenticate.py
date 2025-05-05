@@ -9,7 +9,7 @@ from ldap3 import Connection, Server
 from ldap3.abstract.entry import Entry
 
 from .configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
-from .exceptions import AdAttributeError
+from .exceptions import ActiveDirectoryAttributeError
 
 
 class LdapAuthenticate:
@@ -29,16 +29,15 @@ class LdapAuthenticate:
         config: LdapConfig | dict | streamlit.runtime.secrets.AttrDict
             Config for authentication using active directory
         """
-        self.config = LdapConfig.getInstance(config)
+        self.config = LdapConfig.get_instance(config)
 
     def login(
         self,
         username: str,
         password: str,
-        getInfo: Callable[[Connection], UserInfos | None],
-        additionalCheck: Callable[[Connection | None, UserInfos], Literal[True] | str]
-        | None = None,
-    ) -> UserInfos | str:
+        get_info: Callable[[Connection], UserInfos | None],
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+    ) -> UserInfos | str | Literal[True]:
         """Login to active directory
 
         ## Arguments
@@ -76,14 +75,14 @@ class LdapAuthenticate:
             conn.password = None
             if conn.result["result"] != 0:
                 return "Wrong username or password"
-            user = getInfo(conn)
+            user = get_info(conn)
             if user is None:
                 return f"No information found in active directory for '{username}'"
-            if additionalCheck is None:
+            if additional_check is None:
                 return user
 
-            result = additionalCheck(conn, user)
-            if result == True:
+            result = additional_check(conn, user)
+            if result:
                 return user
             return result
         except Exception as e:
@@ -92,7 +91,7 @@ class LdapAuthenticate:
             if conn.bound:
                 conn.unbind()
 
-    def getInfos(
+    def get_infos(
         self,
         conn: Connection,
         filters: str | dict[str, str],
@@ -112,13 +111,13 @@ class LdapAuthenticate:
         """
         conn.search(
             search_base=self.config.search_base,
-            search_filter=self.__toFilterStr(filters),
+            search_filter=self.__to_filter_str(filters),
             search_scope="SUBTREE",
             attributes=self.config.attributes,
         )
-        return self.__toInfos(conn.entries)
+        return self.__to_infos(conn.entries)
 
-    def getInfo(
+    def get_info(
         self,
         conn: Connection,
         filters: str | dict[str, str],
@@ -136,12 +135,12 @@ class LdapAuthenticate:
         UserInfos | None
             User information if available. otherwise, `None`
         """
-        infos = self.getInfos(conn, filters)
+        infos = self.get_infos(conn, filters)
         if len(infos) < 1:
             return None
         return infos[0]
 
-    def getInfoBySamAccountName(
+    def get_info_by_sam_account_name(
         self,
         conn: Connection,
         name: str,
@@ -158,9 +157,9 @@ class LdapAuthenticate:
         UserInfos | None
             User information if available. otherwise, `None`
         """
-        return self.getInfo(conn, {"sAMAccountName": name})
+        return self.get_info(conn, {"sAMAccountName": name})
 
-    def getInfoByUserPrincipalName(
+    def get_info_by_user_principal_name(
         self,
         conn: Connection,
         name: str,
@@ -177,9 +176,9 @@ class LdapAuthenticate:
         UserInfos | None
             User information if available. otherwise, `None`
         """
-        return self.getInfo(conn, {"userPrincipalName": name})
+        return self.get_info(conn, {"userPrincipalName": name})
 
-    def getInfoByDistinguishedName(
+    def get_info_by_distinguished_name(
         self,
         conn: Connection,
         name: str,
@@ -196,9 +195,10 @@ class LdapAuthenticate:
         UserInfos | None
             User information if available. otherwise, `None`
         """
-        return self.getInfo(conn, {"distinguishedName": name})
+        return self.get_info(conn, {"distinguishedName": name})
 
-    def __toValue(self, attribute) -> UserInfoValue:
+    @staticmethod
+    def __to_value(attribute) -> UserInfoValue:
         """Convert the attribute value
 
         ## Arguments
@@ -211,7 +211,7 @@ class LdapAuthenticate:
             * None: when there is no item in attribute value
         """
         if type(attribute) is not list:
-            raise AdAttributeError(f"'{attribute}' is not `List` type")
+            raise ActiveDirectoryAttributeError(f"'{attribute}' is not `List` type")
         length = len(attribute)
         if length < 1:
             return None
@@ -219,23 +219,24 @@ class LdapAuthenticate:
             return str(attribute[0])
         return attribute
 
-    def __toInfo(self, entry) -> UserInfos | None:
+    def __to_info(self, entry) -> UserInfos | None:
         if type(entry) is not Entry:
             return None
         info = {
-            str(k): self.__toValue(v) for k, v in entry.entry_attributes_as_dict.items()
+            str(k): self.__to_value(v) for k, v in entry.entry_attributes_as_dict.items()
         }
         return info
 
-    def __toInfos(self, entries) -> list[UserInfos]:
+    def __to_infos(self, entries) -> list[UserInfos]:
         """Convert entries to user information list"""
         if type(entries) is not list:
             raise TypeError("Expect 'entries' to be list type")
-        infos = [self.__toInfo(e) for e in entries]
+        infos = [self.__to_info(e) for e in entries]
         infos = [i for i in infos if i is not None]
         return infos
 
-    def __toFilterStr(self, filters: str | dict[str, str]) -> str:
+    @staticmethod
+    def __to_filter_str(filters: str | dict[str, str]) -> str:
         if type(filters) is str:
             return filters
         if type(filters) is dict:
