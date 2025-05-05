@@ -156,40 +156,44 @@ auth = Authenticate(
 ### LdapConfig
 
 Configuration for your organization active directory
-| Name | Type | Description
-| ----------- | --------- | -----------
-| server_path | str | Active directory server path. E.g. 'ldap://ldap.example.com'
-| domain | str | Your organization domain. E.g. 'Example'
-| search_base | str | Active directory base search. E.g. 'dc=example, dc=com'
-| attributes | List[str] | Attribute available in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer)
-| use_ssl | bool | Determine whether to use basic SSL basic authentication
+
+| Name        | Type      | Description                                                                                                                                                       |
+|-------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| server_path | str       | Active directory server path. E.g. 'ldap://ldap.example.com'                                                                                                      |
+| domain      | str       | Your organization domain. E.g. 'Example'                                                                                                                          |
+| search_base | str       | Active directory base search. E.g. 'dc=example, dc=com'                                                                                                           |
+| attributes  | List[str] | Attribute available in your organization active directory. You can reference in [ADExplorer](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer) |
+| use_ssl     | bool      | Determine whether to use basic SSL basic authentication                                                                                                           |
 
 ### SessionStateConfig
 
 Configuration for streamlit [Session State](https://docs.streamlit.io/library/api-reference/session-state) key names
-| Name | Type | Description
-| ----------- | ---- | -----------
-| user | str | Key name to store user information
-| remember_me | str | Key name to store remember_me checkbox selection
+
+| Name        | Type | Description                                      |
+|-------------|------|--------------------------------------------------|
+| user        | str  | Key name to store user information               |
+| remember_me | str  | Key name to store remember_me checkbox selection |
 
 ### CookieConfig
 
 Configuration to store user information to the cookie in client's browser. Thus even when user close the browser and reload the page, Reauthorization is possible with cookie.
-| Name | Type | Description
-| ------------ | ----- | -----------
-| name | str | cookie name to store in client's browser
-| key | str | encryption key to encrypt user information
-| expiry_days | float | expiry date for the cookie
-| auto_renewal | bool | Cookie will expire after defined days from the **last activity** when value is `True`. Cookie will expire after defined days from the **last login** when value is `False`.
-| delay_sec | float | Delay in sec after set or delete cookie
+
+| Name         | Type  | Description                                                                                                                                                                 |
+|--------------|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name         | str   | cookie name to store in client's browser                                                                                                                                    |
+| key          | str   | encryption key to encrypt user information                                                                                                                                  |
+| expiry_days  | float | expiry date for the cookie                                                                                                                                                  |
+| auto_renewal | bool  | Cookie will expire after defined days from the **last activity** when value is `True`. Cookie will expire after defined days from the **last login** when value is `False`. |
+| delay_sec    | float | Delay in sec after set or delete cookie                                                                                                                                     |
 
 ### EncryptorConfig
 
 Configuration for encryption key location to encrypt user information at the client browser before send back to server.
-| Name | Type | Description
-| ---------- | ---- | -----------
-| folderPath | str | Folder location where the encryption key is stored. (Make sure the key location is private)
-| keyName | str | The name of the key
+
+| Name       | Type | Description                                                                                 |
+|------------|------|---------------------------------------------------------------------------------------------|
+| folderPath | str  | Folder location where the encryption key is stored. (Make sure the key location is private) |
+| keyName    | str  | The name of the key                                                                         |
 
 ### TitleConfig
 
