@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streamlit-ldap-authenticator"
+version = "0.2.6"
+description = "Authenticate using ldap"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Nathan Chen", email = "nathan.chen.198@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "streamlit >= 0.63",
+    "ldap3 >= 2.9.1",
+    "pyjwt >= 2.8.0",
+    "streamlit-cookies-controller >= 0.0.3",
+    "streamlit-rsa-auth-ui >= 1.1.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/NathanChen198/streamlit-ldap-authenticator"
+
+[project.optional-dependencies]
+devel = [
+    "wheel",
+    "pytest==7.4.0",
+    "playwright==1.39.0",
+    "requests==2.31.0",
+    "pytest-playwright-snapshot==1.0",
+    "pytest-rerunfailures==12.0"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
