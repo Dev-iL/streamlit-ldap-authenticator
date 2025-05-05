@@ -84,7 +84,7 @@ auth = Authenticate(
 # Login Process
 user = auth.login()
 if user is not None:
-    auth.createLogoutForm({'message': f"Welcome {user['displayName']}"})
+    auth.create_logout_form({'message': f"Welcome {user['displayName']}"})
 
     # Your page application can be written below
     st.write("# Welcome to my App! 👋")
@@ -194,7 +194,7 @@ Configuration for encryption key location to encrypt user information at the cli
 ### TitleConfig
 
 | Name  | Type                                                                | Description                                                                                                                           |
-| ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+|-------|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | text  | str \| None                                                         | Optional title text                                                                                                                   |
 | size  | 'smaller' \| 'small' \| 'medium' \| 'large' \| 'extraLarge' \| None | Optional title size                                                                                                                   |
 | align | 'left' \| 'center' \| 'right' \| None                               | Optional text alignment                                                                                                               |
@@ -203,7 +203,7 @@ Configuration for encryption key location to encrypt user information at the cli
 ### RequiredRule
 
 | Name        | Type         | Description                                               |
-| ----------- | ------------ | --------------------------------------------------------- |
+|-------------|--------------|-----------------------------------------------------------|
 | required    | bool         | `True` if the item is required                            |
 | message     | str \| None  | Optional error message if violate the required rule       |
 | warningOnly | bool \| None | Warning only if `True` and will not block the form submit |
@@ -211,7 +211,7 @@ Configuration for encryption key location to encrypt user information at the cli
 ### PatternRule
 
 | Name        | Type         | Description                                               |
-| ----------- | ------------ | --------------------------------------------------------- |
+|-------------|--------------|-----------------------------------------------------------|
 | pattern     | str          | Regex pattern                                             |
 | message     | str \| None  | Optional error message if violate the pattern rule        |
 | warningOnly | bool \| None | Warning only if `True` and will not block the form submit |
@@ -219,7 +219,7 @@ Configuration for encryption key location to encrypt user information at the cli
 ### TextInputConfig
 
 | Name        | Type                                     | Description                                                                                                          |
-| ----------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+|-------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | placeholder | str \| None                              | Optional placeholder for text input                                                                                  |
 | label       | str \| None                              | Optional label will be display left of text input in wide screen size and top of text input in small screen size     |
 | width       | str \| None                              | Optional width of the input [Reference](https://www.w3schools.com/cssref/pr_dim_width.php)                           |
@@ -230,7 +230,7 @@ Configuration for encryption key location to encrypt user information at the cli
 ### CheckboxConfig
 
 | Name     | Type                                 | Description                                                                                                                |
-| -------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+|----------|--------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
 | label    | str \| None                          | label will be display right of checkbox                                                                                    |
 | width    | str \| None                          | Optional width of the checkbox [Reference](https://www.w3schools.com/cssref/pr_dim_width.php)                              |
 | required | RequiredRule \| bool \| dict \| None | Optional required rule                                                                                                     |
@@ -239,36 +239,36 @@ Configuration for encryption key location to encrypt user information at the cli
 ### ButtonConfig
 
 | Name  | Type         | Description                                                                                                             |
-| ----- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+|-------|--------------|-------------------------------------------------------------------------------------------------------------------------|
 | label | str \| None  | Optional button label                                                                                                   |
 | width | str \| None  | Optional width of the button [Reference](https://www.w3schools.com/cssref/pr_dim_width.php)                             |
 | args  | dict \| None | Optional additional button properties can be reference in [Ant Design Button](https://ant.design/components/button#api) |
 
 ### SigninFormConfig
 
-| Name        | Type                                   | Description                                                                                                      |
-| ----------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| formType    | 'default' \| 'inline' \| None          | Will be 'default' if None                                                                                        |
-| labelSpan   | int \| None                            | Label Layout                                                                                                     |
-| wrapperSpan | int \| None                            | Layout of the input control                                                                                      |
-| maxWidth    | int \| None                            | Max form width                                                                                                   |
-| align       | 'left' \| 'center' \| 'right' \| None  | Horizontal form alignment                                                                                        |
-| title       | TitleConfig \| str \| dict \| None     | Config for title control of the form                                                                             |
-| submit      | ButtonConfig \| str \| dict \| None    | Config for submit button of the form                                                                             |
-| username    | TextInputConfig \| str \| dict \| None | Config for username input of the form                                                                            |
-| password    | TextInputConfig \| str \| dict \| None | Config for password input of the form                                                                            |
-| remember    | CheckboxConfig \| str \| dict \| None  | Config for remember checkbox of the form                                                                         |
+| Name        | Type                                   | Description                                                                                                       |
+|-------------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| formType    | 'default' \| 'inline' \| None          | Will be 'default' if None                                                                                         |
+| labelSpan   | int \| None                            | Label Layout                                                                                                      |
+| wrapperSpan | int \| None                            | Layout of the input control                                                                                       |
+| maxWidth    | int \| None                            | Max form width                                                                                                    |
+| align       | 'left' \| 'center' \| 'right' \| None  | Horizontal form alignment                                                                                         |
+| title       | TitleConfig \| str \| dict \| None     | Config for title control of the form                                                                              |
+| submit      | ButtonConfig \| str \| dict \| None    | Config for submit button of the form                                                                              |
+| username    | TextInputConfig \| str \| dict \| None | Config for username input of the form                                                                             |
+| password    | TextInputConfig \| str \| dict \| None | Config for password input of the form                                                                             |
+| remember    | CheckboxConfig \| str \| dict \| None  | Config for remember checkbox of the form                                                                          |
 | args        | dict \| None                           | Optional additional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
 
 ### SignoutFormConfig
 
-| Name     | Type                                  | Description                                                                                                      |
-| -------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| formType | 'default' \| 'inline' \| None         | Will be 'default' if None                                                                                        |
-| maxWidth | int \| None                           | Max form width                                                                                                   |
-| align    | 'left' \| 'center' \| 'right' \| None | Horizontal form alignment                                                                                        |
-| title    | TitleConfig \| str \| dict \| None    | Config for title control of the form                                                                             |
-| submit   | ButtonConfig \| str \| dict \| None   | Config for submit button of the form                                                                             |
+| Name     | Type                                  | Description                                                                                                       |
+|----------|---------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| formType | 'default' \| 'inline' \| None         | Will be 'default' if None                                                                                         |
+| maxWidth | int \| None                           | Max form width                                                                                                    |
+| align    | 'left' \| 'center' \| 'right' \| None | Horizontal form alignment                                                                                         |
+| title    | TitleConfig \| str \| dict \| None    | Config for title control of the form                                                                              |
+| submit   | ButtonConfig \| str \| dict \| None   | Config for submit button of the form                                                                              |
 | args     | dict \| None                          | Optional additional form properties can be reference in [Ant Design Form](https://ant.design/components/form#api) |
 
 ## Callback Extension
@@ -307,19 +307,23 @@ auth = Authenticate(
     st.secrets['auth_cookie']
 )
 
+
 def login(user: Union[UserInfos, str]) -> Optional[str]:
     st.session_state.TestSs = {"login_successful": True}
+
 
 def logout(event: SignoutEvent) -> Optional[Literal['cancel']]:
     if 'TestSs' in st.session_state:
         del st.session_state.TestSs
     if 'TestSs' in st.session_state:
         return 'cancel'
+    return None
+
 
 # Login Process
 user = auth.login(callback=login)
 if user is not None:
-    auth.createLogoutForm({'message': f"Welcome {user['displayName']}"}, callback=logout)
+    auth.create_logout_form({'message': f"Welcome {user['displayName']}"}, callback=logout)
 
     # Your page application can be written below
     st.write("# Welcome to my App! 👋")
@@ -344,15 +348,17 @@ auth = Authenticate(
     st.secrets['auth_cookie']
 )
 
-def checkUserByTitle(conn: Optional[Connection], user: UserInfos):
+
+def check_user_by_title(conn: Optional[Connection], user: UserInfos):
     title = "Engineer"
     if user['title'].__contains__(title): return True
     return f"You are not a {title}. Not authorize to use this page."
 
+
 # Login Process
-user = auth.login(checkUserByTitle)
+user = auth.login(check_user_by_title)
 if user is not None:
-    auth.createLogoutForm({'message':f"Welcome {user['displayName']}"})
+    auth.create_logout_form({'message': f"Welcome {user['displayName']}"})
 
     # Your page application can be written below
     st.write("# Welcome to my App! 👋")
@@ -381,27 +387,31 @@ auth = Authenticate(
     st.secrets['auth_cookie']
 )
 
-def __isReportTo(user: UserInfos, conn: Optional[Connection], email: str, max_level = 3, current_level = 1):
+
+def __is_report_to(user: UserInfos, conn: Optional[Connection], email: str, max_level=3, current_level=1):
     if current_level > max_level: return False
 
     manager = user['manager']
 
     if type(manager) is str and type(conn) is Connection:
-        manager = auth.ldap_auth.getInfoByDistinguishedName(conn, manager)
+        manager = auth.ldap_auth.get_info_by_distinguished_name(conn, manager)
         user['manager'] = manager
 
     if type(manager) is not dict: return False
     if manager['mail'] == email: return True
-    return __isReportTo(manager, conn, email, max_level, current_level + 1)
+    return __is_report_to(manager, conn, email, max_level, current_level + 1)
 
-def checkUserInOrganization(conn: Optional[Connection], user: UserInfos):
+
+def check_user_in_organization(conn: Optional[Connection], user: UserInfos):
     email = 'vbalamurugan@illumina.com'
-    return True if __isReportTo(user, conn, email) else f'You are not reported to {email}. Not authorize to use this page.'
+    return True if __is_report_to(user, conn,
+                                  email) else f'You are not reported to {email}. Not authorize to use this page.'
+
 
 # Login Process
-user = auth.login(checkUserInOrganization)
+user = auth.login(check_user_in_organization)
 if user is not None:
-    auth.createLogoutForm({'message':f"Welcome {user['displayName']}"})
+    auth.create_logout_form({'message': f"Welcome {user['displayName']}"})
 
     # Your page application can be written below
     st.write("# Welcome to my App! 👋")
@@ -430,15 +440,17 @@ auth = Authenticate(
     st.secrets['auth_cookie']
 )
 
-def checkUserInList(conn: Optional[Connection], user: UserInfos):
-    allowUsers = [ "nchen1@illumina.com" ]
+
+def check_user_in_list(conn: Optional[Connection], user: UserInfos):
+    allowUsers = ["nchen1@illumina.com"]
     if user['userPrincipalName'] in allowUsers: return True
     return f"You are not in the authorized list. Not allowed to use this page"
 
+
 # Login Process
-user = auth.login(checkUserInList)
+user = auth.login(check_user_in_list)
 if user is not None:
-    auth.createLogoutForm({'message':f"Welcome {user['displayName']}"})
+    auth.create_logout_form({'message': f"Welcome {user['displayName']}"})
 
     # Your page application can be written below
     st.write("# Welcome to my App! 👋")
@@ -483,7 +495,7 @@ streamlit run list_login.py
 
 ### Version 0.2.1
 
-- Fix cannot login if encryptor module is provided.
+- Fix cannot log in if encryptor module is provided.
 - Fix cookie auto-renewal not working when no additionalCheck parameter is provided.
 
 ### Version 0.2.2
