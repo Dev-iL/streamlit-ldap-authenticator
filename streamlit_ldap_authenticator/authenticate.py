@@ -415,10 +415,7 @@ class Authenticate:
             return user
 
         # check user authentication if it is found cookie in client's browser
-        try:
-            self.cookie_manager.refresh()
-        except StreamlitDuplicateElementKey:
-            time.sleep(0.1)
+        self.__allow_cookie_refresh()
         user = self.__get_cookie()
         if self.__check_reauthentication(user, additional_check):
             self.__set_user(user)
@@ -435,15 +432,19 @@ class Authenticate:
         if type(user) is not dict:
             return None
         self.__set_user(user)
-        try:
-            self.cookie_manager.refresh()
-        except StreamlitDuplicateElementKey:
-            time.sleep(0.1)
+        self.__allow_cookie_refresh()
         self.__set_cookie(user)
         try:
             return user
         finally:
             st.rerun()
+
+    def __allow_cookie_refresh(self):
+        """Allow cookie refresh to avoid duplicate element key error"""
+        try:
+            self.cookie_manager.refresh()
+        except StreamlitDuplicateElementKey:
+            time.sleep(0.1)
 
     @staticmethod
     def __get_logout_config(config: Object | LogoutConfig | None = None):
