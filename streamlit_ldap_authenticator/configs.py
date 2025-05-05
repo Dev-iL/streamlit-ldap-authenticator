@@ -127,10 +127,12 @@ class Config:
         if key in dict_:
             value = dict_[key]
             if type(type_) is list:
-                if not any([type(value) is t for t in type_]):
-                    raise ValueError(f"'{value}' is not a valid {key}")
+                if not any(type(value) is t for t in type_):
+                    msg = f"'{value}' is not a valid {key}"
+                    raise ValueError(msg)
             elif type(value) is not type_:
-                raise ValueError(f"'{value}' is not a valid {key}")
+                msg = f"'{value}' is not a valid {key}"
+                raise ValueError(msg)
         else:
             value = default_value_if_none
         return value
@@ -138,16 +140,18 @@ class Config:
     @classmethod
     def _get_attr(cls, dict_: AttrDict, key: str, _type: type):
         if key not in dict_:
-            raise AttributeError(f"'{key}' is not found")
+            msg = f"'{key}' is not found"
+            raise AttributeError(msg)
 
         value = dict_[key]
         if type(value) is not _type:
-            raise AttributeError(f"'{key}' is not {_type.__name__}")
+            msg = f"'{key}' is not {_type.__name__}"
+            raise AttributeError(msg)
         return value
 
 
 class LdapConfig(Config):
-    """Config for authentication using active directory
+    """Config for authentication using active directory.
 
     ## Properties
     server_path: str
@@ -175,8 +179,8 @@ class LdapConfig(Config):
         search_base: str,
         attributes: list[str],
         use_ssl: bool = True,
-    ):
-        """Create an instance of `LdapConfig` object
+    ) -> None:
+        """Create an instance of `LdapConfig` object.
 
         ## Arguments
         server_path: str
@@ -209,11 +213,12 @@ class LdapConfig(Config):
             return value
         if type(value) is dict or type(value) is _AttrDict:
             return cls.from_dict(value)
-        raise AttributeError("Unexpected 'value' type")
+        msg = "Unexpected 'value' type"
+        raise AttributeError(msg)
 
 
 class SessionStateConfig(Config):
-    """Config for streamlit session state key names
+    """Config for streamlit session state key names.
 
     ## Properties
     user: str
@@ -236,7 +241,7 @@ class SessionStateConfig(Config):
         user: str = __default_user__,
         remember_me: str = __default_remember_me__,
         auth_result: str = __default_auth_result__,
-    ):
+    ) -> None:
         self.user = user
         self.remember_me = remember_me
         self.auth_result = auth_result
@@ -272,7 +277,7 @@ class SessionStateConfig(Config):
 
 
 class CookieConfig(Config):
-    """Secrets to encode information to cookie in the client's browser
+    """Secrets to encode information to cookie in the client's browser.
 
     ## Properties
     key: str
@@ -301,8 +306,8 @@ class CookieConfig(Config):
         expiry_days: float = __default_expiry_days__,
         auto_renewal: bool = __default_auto_renewal__,
         delay_sec: float = __default_delay_sec__,
-    ):
-        """Create an instance of `CookieConfig` object"""
+    ) -> None:
+        """Create an instance of `CookieConfig` object."""
         self.key = key
         self.name = name
         self.expiry_days = expiry_days
@@ -350,7 +355,7 @@ class CookieConfig(Config):
 
 
 class EncryptorConfig(Config):
-    """Encryption key to encode and decode information between client and server
+    """Encryption key to encode and decode information between client and server.
 
     ## Properties
     folderPath: str

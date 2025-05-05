@@ -5,7 +5,7 @@
 import re
 import time
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 import jwt
@@ -45,7 +45,7 @@ class Authenticate:
     """Authentication using active directory.
         Reauthentication method available
         * streamlit session_state: Valid for the current session. if the page is refreshed, session_state will reset thus loose stored data for reauthentication.
-        * cookie in the client's browser: Valid until the cookie in the browser is expired
+        * cookie in the client's browser: Valid until the cookie in the browser is expired.
 
     ## Properties
     session_configs: SessionStateConfig
@@ -65,8 +65,8 @@ class Authenticate:
         session_configs: SessionStateConfig | AttrDict | None = None,
         cookie_configs: CookieConfig | AttrDict | None = None,
         encryptor_configs: EncryptorConfig | AttrDict | None = None,
-    ):
-        """Create a new instance of `Authenticate`
+    ) -> None:
+        """Create a new instance of `Authenticate`.
 
         ## Arguments
         ldap_config: LdapConfig | dict | streamlit.runtime.secrets.AttrDict
@@ -98,7 +98,7 @@ class Authenticate:
     # streamlit session_state variables
     def __get_user(self) -> UserInfos | None:
         """Get the user information from streamlit session_state
-            if reauthorization using streamlit session_state is enabled
+            if reauthorization using streamlit session_state is enabled.
 
         ## Returns
         UserInfos | None
@@ -109,9 +109,9 @@ class Authenticate:
         user = st.session_state[self.session_configs.user]
         return user if type(user) is dict else None
 
-    def __set_user(self, user: UserInfos | None):
+    def __set_user(self, user: UserInfos | None) -> None:
         """Assign the user information to session_state of streamlit
-            if reauthorization using streamlit session_state is enabled
+            if reauthorization using streamlit session_state is enabled.
 
         ## Arguments
         user : UserInfos | None
@@ -121,7 +121,7 @@ class Authenticate:
             return
         st.session_state[self.session_configs.user] = user
 
-    def __set_remember_me(self, remember_me: bool):
+    def __set_remember_me(self, remember_me: bool) -> None:
         st.session_state[self.session_configs.remember_me] = remember_me
 
     def __get_remember_me(self) -> bool:
@@ -146,7 +146,7 @@ class Authenticate:
         str
             The JWT cookie for passwordless reauthentication.
         """
-        exp_date = datetime.now(tz=timezone.utc) + timedelta(days=cookie_configs.expiry_days)
+        exp_date = datetime.now(tz=UTC) + timedelta(days=cookie_configs.expiry_days)
         return jwt.encode(
             {"user": user, "exp_date": exp_date.timestamp()},
             cookie_configs.key,
@@ -168,27 +168,35 @@ class Authenticate:
         """
         try:
             if token is None:
-                raise CookieError("No cookie found")
+                msg = "No cookie found"
+                raise CookieError(msg)
             if type(token) is not str:
-                raise CookieError("Cookie value is expected to be `str`")
+                msg = "Cookie value is expected to be `str`"
+                raise CookieError(msg)
 
             value = jwt.decode(token, cookie_configs.key, algorithms=["HS256"])
             if type(value) is not dict:
-                raise CookieError("Decoded cookie is not dict")
+                msg = "Decoded cookie is not dict"
+                raise CookieError(msg)
 
             if "exp_date" not in value:
-                raise CookieError("exp_date is not found")
+                msg = "exp_date is not found"
+                raise CookieError(msg)
             exp_date = value["exp_date"]
             if type(exp_date) is not float:
-                raise CookieError("exp_date is not float")
-            if exp_date < datetime.now(tz=timezone.utc).timestamp():
-                raise CookieError("Cookie expired")
+                msg = "exp_date is not float"
+                raise CookieError(msg)
+            if exp_date < datetime.now(tz=UTC).timestamp():
+                msg = "Cookie expired"
+                raise CookieError(msg)
 
             if "user" not in value:
-                raise CookieError("user is not found")
+                msg = "user is not found"
+                raise CookieError(msg)
             user = value["user"]
             if type(user) is not dict:
-                raise CookieError("user is not dict")
+                msg = "user is not dict"
+                raise CookieError(msg)
 
             return user
         except Exception as e:
@@ -197,7 +205,7 @@ class Authenticate:
 
     def __get_cookie(self) -> UserInfos | None:
         """Get the decoded user information from cookie in the client's browser.
-            if reauthorization using cookie in the client's browser is enabled
+            if reauthorization using cookie in the client's browser is enabled.
 
         ## Returns
         UserInfos | None
@@ -209,9 +217,9 @@ class Authenticate:
         token = self.cookie_manager.get(self.cookie_configs.name)
         return self.__token_decode(self.cookie_configs, token)
 
-    def __set_cookie(self, user: UserInfos | None):
+    def __set_cookie(self, user: UserInfos | None) -> None:
         """Assign the encoded user information to cookie in the client's browser
-            if reauthorization using cookie in the client's browser is enabled
+            if reauthorization using cookie in the client's browser is enabled.
 
         ## Arguments
         user: UserInfos
@@ -231,9 +239,9 @@ class Authenticate:
         self.cookie_manager.set(self.cookie_configs.name, token, expires=exp_date)
         time.sleep(self.cookie_configs.delay_sec)
 
-    def __delete_cookie(self):
+    def __delete_cookie(self) -> None:
         """Delete the cookie in the client's browser
-        if reauthorization using cookie in the client's browser is enabled
+        if reauthorization using cookie in the client's browser is enabled.
         """
         if self.cookie_configs is None:
             return
@@ -269,7 +277,8 @@ class Authenticate:
 
     def __create_login_form(
         self,
-        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
         get_login_user_name: Callable[[str], str] | None = None,
         get_info: Callable[[Connection, str], UserInfos | None] | None = None,
         config: Object | LoginConfig | None = None,
@@ -277,7 +286,9 @@ class Authenticate:
     ):
         get_info = get_info if get_info is not None else self.get_info
         get_login_user_name = (
-            get_login_user_name if get_login_user_name is not None else self.get_login_user_name
+            get_login_user_name
+            if get_login_user_name is not None
+            else self.get_login_user_name
         )
         default = (
             {"remember": self.__get_remember_me()}
@@ -326,9 +337,10 @@ class Authenticate:
     def __check_reauthentication(
         self,
         user: UserInfos | None,
-        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
-    ):
-        """Check user information during reauthorization
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
+    ) -> bool:
+        """Check user information during reauthorization.
 
         ## Arguments
         user : Person | None
@@ -362,7 +374,8 @@ class Authenticate:
 
     def login(
         self,
-        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
         get_login_user_name: Callable[[str], str] | None = None,
         get_info: Callable[[Connection, str], UserInfos | None] | None = None,
         config: Object | LoginConfig | None = None,
@@ -468,7 +481,7 @@ class Authenticate:
     ) -> None:
         """Create logout form
         config: Object | LogoutConfig | None
-            Optional config for logout form
+            Optional config for logout form.
 
         callback: ((user: UserInfos | str) -> str | None) | None
             Optional callback function.

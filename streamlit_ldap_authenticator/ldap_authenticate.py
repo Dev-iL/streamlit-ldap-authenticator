@@ -13,7 +13,7 @@ from .exceptions import ActiveDirectoryAttributeError
 
 
 class LdapAuthenticate:
-    """Authentication using active directory
+    """Authentication using active directory.
 
     ## Properties
     config: LdapConfig
@@ -23,7 +23,7 @@ class LdapAuthenticate:
     config: LdapConfig
 
     def __init__(self, config: LdapConfig | AttrDict) -> None:
-        """Create an instance of `LdapAuthenticate` object
+        """Create an instance of `LdapAuthenticate` object.
 
         ## Arguments
         config: LdapConfig | dict | streamlit.runtime.secrets.AttrDict
@@ -36,9 +36,10 @@ class LdapAuthenticate:
         username: str,
         password: str,
         get_info: Callable[[Connection], UserInfos | None],
-        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str] | None = None,
+        additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str]
+        | None = None,
     ) -> UserInfos | str | Literal[True]:
-        """Login to active directory
+        """Login to active directory.
 
         ## Arguments
         userName: str
@@ -96,7 +97,7 @@ class LdapAuthenticate:
         conn: Connection,
         filters: str | dict[str, str],
     ) -> list[UserInfos]:
-        """Get list of entries information from active directory
+        """Get list of entries information from active directory.
 
         ## Arguments
         conn: Connection
@@ -122,7 +123,7 @@ class LdapAuthenticate:
         conn: Connection,
         filters: str | dict[str, str],
     ) -> UserInfos | None:
-        """Get entry information from active directory
+        """Get entry information from active directory.
 
         ## Arguments
         conn: Connection
@@ -145,7 +146,7 @@ class LdapAuthenticate:
         conn: Connection,
         name: str,
     ) -> UserInfos | None:
-        """Get information from active directory
+        """Get information from active directory.
 
         ## Arguments
         conn: Connection
@@ -164,7 +165,7 @@ class LdapAuthenticate:
         conn: Connection,
         name: str,
     ) -> UserInfos | None:
-        """Get information from active directory
+        """Get information from active directory.
 
         ## Arguments
         conn: Connection
@@ -183,7 +184,7 @@ class LdapAuthenticate:
         conn: Connection,
         name: str,
     ) -> UserInfos | None:
-        """Get information from active directory
+        """Get information from active directory.
 
         ## Arguments
         conn: Connection
@@ -199,7 +200,7 @@ class LdapAuthenticate:
 
     @staticmethod
     def __to_value(attribute) -> UserInfoValue:
-        """Convert the attribute value
+        """Convert the attribute value.
 
         ## Arguments
         attribute: any
@@ -211,7 +212,8 @@ class LdapAuthenticate:
             * None: when there is no item in attribute value
         """
         if type(attribute) is not list:
-            raise ActiveDirectoryAttributeError(f"'{attribute}' is not `List` type")
+            msg = f"'{attribute}' is not `List` type"
+            raise ActiveDirectoryAttributeError(msg)
         length = len(attribute)
         if length < 1:
             return None
@@ -222,18 +224,18 @@ class LdapAuthenticate:
     def __to_info(self, entry) -> UserInfos | None:
         if type(entry) is not Entry:
             return None
-        info = {
-            str(k): self.__to_value(v) for k, v in entry.entry_attributes_as_dict.items()
+        return {
+            str(k): self.__to_value(v)
+            for k, v in entry.entry_attributes_as_dict.items()
         }
-        return info
 
     def __to_infos(self, entries) -> list[UserInfos]:
-        """Convert entries to user information list"""
+        """Convert entries to user information list."""
         if type(entries) is not list:
-            raise TypeError("Expect 'entries' to be list type")
+            msg = "Expect 'entries' to be list type"
+            raise TypeError(msg)
         infos = [self.__to_info(e) for e in entries]
-        infos = [i for i in infos if i is not None]
-        return infos
+        return [i for i in infos if i is not None]
 
     @staticmethod
     def __to_filter_str(filters: str | dict[str, str]) -> str:
@@ -242,6 +244,7 @@ class LdapAuthenticate:
         if type(filters) is dict:
             search_filters = [f"({k}={v})" for k, v in filters.items()]
             return f"(&{''.join(search_filters)})"
+        msg = "Expect 'filters' argument to be either str or Dict[str, str] type"
         raise TypeError(
-            "Expect 'filters' argument to be either str or Dict[str, str] type",
+            msg,
         )
