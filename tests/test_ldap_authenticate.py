@@ -1,9 +1,10 @@
 """Tests for streamlit_ldap_authenticator.ldap_authenticate.LdapAuthenticate."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from streamlit_ldap_authenticator.configs import LdapConfig
+from ldap3.core.exceptions import LDAPException
+
 from streamlit_ldap_authenticator.ldap_authenticate import LdapAuthenticate
 
 
@@ -24,6 +25,7 @@ def mock_conn():
 # ---------------------------------------------------------------------------
 # AC-1.6 — LdapAuthenticate.login() tests
 # ---------------------------------------------------------------------------
+
 
 class TestLdapLogin:
     def test_successful_bind_returns_user_info(self, ldap_auth, mock_conn, mocker):
@@ -70,7 +72,7 @@ class TestLdapLogin:
         returned message to avoid exposing internal topology.
         """
         server_path = ldap_auth.config.server_path  # "ldap://test-server:389"
-        mock_conn.bind.side_effect = OSError(
+        mock_conn.bind.side_effect = LDAPException(
             f"Connection refused to {server_path}"
         )
         mocker.patch(

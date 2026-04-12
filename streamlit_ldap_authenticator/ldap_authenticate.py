@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import Literal
 
 from ldap3 import Connection, Entry, Server
+from ldap3.core.exceptions import LDAPException
 
 from .configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
 from .exceptions import ActiveDirectoryAttributeError
@@ -88,8 +89,11 @@ class LdapAuthenticate:
             if result:
                 return user
             return result
-        except Exception as e:
+        except LDAPException as e:
             return str(e).replace(self.config.server_path, "server")
+        except Exception as e:
+            logger.error("Unexpected LDAP error: %s", type(e).__name__)
+            return "An unexpected error occurred during authentication"
         finally:
             if conn.bound:
                 conn.unbind()
