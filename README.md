@@ -29,7 +29,7 @@ A fast and easy way to handle the user authentication using ldap in your Streaml
 Open a terminal and run:
 
 ```terminal
-pip install streamlit-ldap-authenticator
+pip install git+https://github.com/Dev-iL/streamlit-ldap-authenticator
 ```
 
 ## Quickstart
