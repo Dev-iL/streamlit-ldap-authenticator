@@ -39,10 +39,10 @@ class TestTokenEncodeDecode:
         assert result == user
 
     def test_expired_token_returns_none(self, cookie_config):
-        """A token whose exp_date is in the past returns None."""
-        past = (datetime.now(tz=UTC) - timedelta(days=1)).timestamp()
+        """A token whose exp claim is in the past returns None."""
+        past = datetime.now(tz=UTC) - timedelta(days=1)
         token = jwt.encode(
-            {"user": {"cn": "alice"}, "exp_date": past},
+            {"user": {"cn": "alice"}, "exp": past},
             cookie_config.key,
             algorithm="HS256",
         )

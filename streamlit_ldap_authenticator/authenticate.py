@@ -149,7 +149,7 @@ class Authenticate:
         """
         exp_date = datetime.now(tz=UTC) + timedelta(days=cookie_configs.expiry_days)
         return jwt.encode(
-            {"user": user, "exp_date": exp_date.timestamp()},
+            {"user": user, "exp": exp_date},
             cookie_configs.key,
             algorithm="HS256",
         )
@@ -180,15 +180,8 @@ class Authenticate:
                 msg = "Decoded cookie is not dict"
                 raise CookieError(msg)
 
-            if "exp_date" not in value:
-                msg = "exp_date is not found"
-                raise CookieError(msg)
-            exp_date = value["exp_date"]
-            if type(exp_date) is not float:
-                msg = "exp_date is not float"
-                raise CookieError(msg)
-            if exp_date < datetime.now(tz=UTC).timestamp():
-                msg = "Cookie expired"
+            if "exp" not in value:
+                msg = "exp claim not found"
                 raise CookieError(msg)
 
             if "user" not in value:
