@@ -1,9 +1,8 @@
 """Tests for streamlit_ldap_authenticator.ldap_authenticate.LdapAuthenticate."""
 
+import ldap
 import pytest
 from unittest.mock import MagicMock
-
-from ldap3.core.exceptions import LDAPException
 
 from streamlit_ldap_authenticator.ldap_authenticate import LdapAuthenticate
 
@@ -15,10 +14,8 @@ def ldap_auth(ldap_config):
 
 @pytest.fixture
 def mock_conn():
-    """A mock ldap3 Connection that simulates a successful bind."""
+    """A mock python-ldap LDAPObject that simulates a successful bind."""
     conn = MagicMock()
-    conn.bound = True
-    conn.result = {"result": 0}
     return conn
 
 
@@ -31,14 +28,7 @@ class TestLdapLogin:
     def test_successful_bind_returns_user_info(self, ldap_auth, mock_conn, mocker):
         """Successful LDAP bind + get_info returns the user dict."""
         user = {"cn": "alice", "mail": "alice@example.com"}
-        mock_conn.result = {"result": 0}
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Connection",
-            return_value=mock_conn,
-        )
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Server",
-        )
+        mocker.patch("ldap.initialize", return_value=mock_conn)
 
         get_info = MagicMock(return_value=user)
 
@@ -46,42 +36,35 @@ class TestLdapLogin:
 
         assert result == user
         get_info.assert_called_once()
+        mock_conn.unbind_s.assert_called_once()
 
     def test_wrong_credentials_returns_error_string(self, ldap_auth, mock_conn, mocker):
-        """LDAP bind result != 0 → 'Wrong username or password' string."""
-        mock_conn.result = {"result": 49}  # LDAP_INVALID_CREDENTIALS
-        mock_conn.bound = False
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Connection",
-            return_value=mock_conn,
+        """INVALID_CREDENTIALS exception → 'Wrong username or password' string."""
+        # pyrefly: ignore [missing-attribute]
+        mock_conn.simple_bind_s.side_effect = ldap.INVALID_CREDENTIALS(
+            {"desc": "Invalid credentials"}
         )
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Server",
-        )
+        mocker.patch("ldap.initialize", return_value=mock_conn)
 
         result = ldap_auth.login("alice", "wrong_password", MagicMock())
 
         assert result == "Wrong username or password"
+        mock_conn.unbind_s.assert_not_called()
 
     def test_exception_during_bind_returns_sanitized_string(
         self, ldap_auth, mock_conn, mocker
     ):
-        """Exception during bind returns a string with server path replaced.
+        """LDAPError during bind returns a string with server path replaced.
 
         The server path (``ldap://test-server:389``) must be stripped from the
         returned message to avoid exposing internal topology.
         """
         server_path = ldap_auth.config.server_path  # "ldap://test-server:389"
-        mock_conn.bind.side_effect = LDAPException(
-            f"Connection refused to {server_path}"
+        # pyrefly: ignore [missing-attribute]
+        mock_conn.simple_bind_s.side_effect = ldap.SERVER_DOWN(
+            {"desc": f"Cannot contact LDAP server at {server_path}"}
         )
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Connection",
-            return_value=mock_conn,
-        )
-        mocker.patch(
-            "streamlit_ldap_authenticator.ldap_authenticate.Server",
-        )
+        mocker.patch("ldap.initialize", return_value=mock_conn)
 
         result = ldap_auth.login("alice", "pass", MagicMock())
 

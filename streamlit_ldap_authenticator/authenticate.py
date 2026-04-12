@@ -155,7 +155,9 @@ class Authenticate:
         )
 
     @staticmethod
-    def __token_decode(cookie_configs: CookieConfig, token: str | None) -> UserInfos | None:
+    def __token_decode(
+        cookie_configs: CookieConfig, token: str | None
+    ) -> UserInfos | None:
         """Decodes the contents of the reauthentication cookie.
 
         ## Arguments:
