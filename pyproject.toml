@@ -31,7 +31,12 @@ Homepage = "https://github.com/NathanChen198/streamlit-ldap-authenticator"
 [project.optional-dependencies]
 dev = [
     "wheel",
+    "pytest",
+    "pytest-mock",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.setuptools]
 include-package-data = true
