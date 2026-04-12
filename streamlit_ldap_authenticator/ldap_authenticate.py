@@ -9,8 +9,8 @@ from typing import Literal
 from ldap3 import Connection, Entry, Server
 from ldap3.core.exceptions import LDAPException
 
-from .configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
-from .exceptions import ActiveDirectoryAttributeError
+from streamlit_ldap_authenticator.configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
+from streamlit_ldap_authenticator.exceptions import ActiveDirectoryAttributeError
 
 logger = logging.getLogger("streamlit_ldap_authenticator")
 
@@ -86,7 +86,7 @@ class LdapAuthenticate:
                 return user
 
             result = additional_check(conn, user)
-            if result:
+            if result is True:
                 return user
             return result
         except LDAPException as e:

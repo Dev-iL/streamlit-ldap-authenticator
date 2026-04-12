@@ -24,6 +24,7 @@ from streamlit_rsa_auth_ui.configs import (
 class LoginConfig(SigninFormConfig):
     busy_message: str
     error_icon: str | None
+    use_dialog: bool
 
     def __init__(
         self,
@@ -360,9 +361,9 @@ class EncryptorConfig(Config):
     """Encryption key to encode and decode information between client and server.
 
     ## Properties
-    folderPath: str
+    folder_path: str
         Location of the folder where both private key and public key is located
-    keyName: str
+    key_name: str
         The name of the key
     """
 

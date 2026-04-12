@@ -22,7 +22,7 @@ from streamlit_rsa_auth_ui import (
     getEvent,
 )
 
-from .configs import (
+from streamlit_ldap_authenticator.configs import (
     AttrDict,
     CookieConfig,
     EncryptorConfig,
@@ -32,8 +32,8 @@ from .configs import (
     SessionStateConfig,
     UserInfos,
 )
-from .exceptions import CookieError
-from .ldap_authenticate import Connection, LdapAuthenticate
+from streamlit_ldap_authenticator.exceptions import CookieError
+from streamlit_ldap_authenticator.ldap_authenticate import Connection, LdapAuthenticate
 
 logger = logging.getLogger("streamlit_ldap_authenticator")
 
@@ -155,7 +155,7 @@ class Authenticate:
         )
 
     @staticmethod
-    def __token_decode(cookie_configs: CookieConfig, token) -> UserInfos | None:
+    def __token_decode(cookie_configs: CookieConfig, token: str | None) -> UserInfos | None:
         """Decodes the contents of the reauthentication cookie.
 
         ## Arguments:
@@ -247,6 +247,9 @@ class Authenticate:
             time.sleep(self.cookie_configs.delay_sec)
 
     def __get_login_config(self, config: Object | LoginConfig | None = None):
+        # NOTE: LoginConfig-only fields (e.g. use_dialog) must be extracted by
+        # the caller BEFORE calling this method — toDict() intentionally omits
+        # them so they are never forwarded to the external authUI component.
         config = (
             config
             if type(config) is dict
@@ -360,7 +363,7 @@ class Authenticate:
                 self.__set_cookie(user)
             return True  # No additional check is required
         result = additional_check(None, user)
-        if not result:
+        if result is not True:
             return False
 
         if self.cookie_configs is not None and self.cookie_configs.auto_renewal:
@@ -459,8 +462,10 @@ class Authenticate:
             # return user if form auth just succeeded synchronously.
             return self.__get_user()
 
-    def __allow_cookie_refresh(self):
+    def __allow_cookie_refresh(self) -> None:
         """Allow cookie refresh to avoid duplicate element key error"""
+        if self.cookie_configs is None:
+            return
         try:
             self.cookie_manager.refresh()
         except StreamlitDuplicateElementKey:

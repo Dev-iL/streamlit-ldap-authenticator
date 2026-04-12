@@ -135,8 +135,8 @@ add to the secrets.toml
 
 ```ini
 [encryptor]
-folderPath = "rsa"
-keyName = "authkey"
+folder_path = "rsa"
+key_name = "authkey"
 ```
 
 ### Change the authentication declaration code
@@ -192,8 +192,8 @@ Configuration for encryption key location to encrypt user information at the cli
 
 | Name       | Type | Description                                                                                 |
 |------------|------|---------------------------------------------------------------------------------------------|
-| folderPath | str  | Folder location where the encryption key is stored. (Make sure the key location is private) |
-| keyName    | str  | The name of the key                                                                         |
+| folder_path | str  | Folder location where the encryption key is stored. (Make sure the key location is private) |
+| key_name    | str  | The name of the key                                                                         |
 
 ### TitleConfig
 
