@@ -2,14 +2,16 @@
 # Date      : 04-Apr-2024
 
 
+import logging
 from collections.abc import Callable
 from typing import Literal
 
-from ldap3 import Connection, Server
-from ldap3.abstract.entry import Entry
+from ldap3 import Connection, Entry, Server
 
 from .configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
 from .exceptions import ActiveDirectoryAttributeError
+
+logger = logging.getLogger("streamlit_ldap_authenticator")
 
 
 class LdapAuthenticate:

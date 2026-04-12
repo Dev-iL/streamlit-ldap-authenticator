@@ -2,6 +2,7 @@
 # Date      : 27-Apr-2024
 
 
+import logging
 import re
 import time
 from collections.abc import Callable
@@ -10,7 +11,7 @@ from typing import Literal
 
 import jwt
 import streamlit as st
-from streamlit.elements.lib.utils import StreamlitDuplicateElementKey
+from streamlit.errors import StreamlitDuplicateElementKey
 from streamlit_cookies_controller import CookieController
 from streamlit_rsa_auth_ui import (
     Encryptor,
@@ -34,7 +35,7 @@ from .configs import (
 from .exceptions import CookieError
 from .ldap_authenticate import Connection, LdapAuthenticate
 
-ss = st.session_state
+logger = logging.getLogger("streamlit_ldap_authenticator")
 
 
 RegexDomain = re.compile(r"^(.*)\\(.*)$")
@@ -329,7 +330,7 @@ class Authenticate:
                 st.error(result, icon=error_icon)
                 return None
             if type(result) is dict:
-                del ss[self.session_configs.auth_result]
+                del st.session_state[self.session_configs.auth_result]
                 return result
             st.error(f"Unexpected Return: {result}", icon=error_icon)
             return None
