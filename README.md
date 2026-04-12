@@ -1,5 +1,6 @@
 # Welcome to Streamlit LDAP Authenticator 🔑
 
+[![GitHub release][version_badge]][version_link]
 [![PyPI][pypi_badge]][pypi_link]
 [![Download][pypi_download_badge]][pypi_link]
 [![GitHub][github_badge]][github_link]
@@ -467,15 +468,16 @@ Now run it to open the app!
 streamlit run list_login.py
 ```
 
-
+[version_badge]: https://img.shields.io/github/release/Dev-iL/streamlit-ldap-authenticator.svg
+[version_link]: https://GitHub.com/Dev-iL/streamlit-ldap-authenticator/releases/
 [pypi_badge]: https://img.shields.io/pypi/v/streamlit-ldap-authenticator.svg
 [pypi_link]: https://pypi.org/project/streamlit-ldap-authenticator
 [pypi_download_badge]: https://static.pepy.tech/badge/streamlit-ldap-authenticator
 [github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label
-[github_link]: https://github.com/NathanChen198/streamlit-ldap-authenticator
+[github_link]: https://github.com/Dev-iL/streamlit-ldap-authenticator
 [license_badge]: https://img.shields.io/badge/Licence-MIT-gr.svg
-[license_link]: https://github.com/NathanChen198/streamlit-ldap-authenticator/blob/main/LICENSE
+[license_link]: https://github.com/Dev-iL/streamlit-ldap-authenticator/blob/main/LICENSE
 [issue_badge]: https://img.shields.io/github/issues/NathanChen198/streamlit-ldap-authenticator
-[issue_link]: https://github.com/NathanChen198/streamlit-ldap-authenticator/issues
+[issue_link]: https://github.com/Dev-iL/streamlit-ldap-authenticator/issues
 [pull_badge]: https://img.shields.io/github/issues-pr/NathanChen198/streamlit-ldap-authenticator
 [pull_link]: https://github.com/NathanChen198/streamlit-ldap-authenticator/pulls
