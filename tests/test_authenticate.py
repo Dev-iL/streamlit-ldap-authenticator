@@ -267,6 +267,37 @@ class TestDialogAndFragment:
         assert auth_instance.session_configs.auth_result not in session_state
         assert session_state.get(auth_instance.session_configs.user) == user
 
+    def test_dialog_ldap_success_stores_result_and_calls_rerun(
+        self, auth_instance, session_state, mocker
+    ):
+        """use_dialog=True: successful LDAP auth inside dialog stores auth_result
+        in session state and calls st.rerun() to close the dialog.
+        """
+        user = {"cn": "henry", "mail": "henry@test.com"}
+        session_state["login_result"] = "pending"
+
+        signin_event = SigninEvent()
+        signin_event.username = "henry"
+        signin_event.password = "s3cr3t"
+        signin_event.remember = False
+        auth_instance.ui.signinForm.return_value = MagicMock()
+        mocker.patch(
+            "streamlit_ldap_authenticator.authenticate.getEvent",
+            return_value=signin_event,
+        )
+        mocker.patch("streamlit_ldap_authenticator.authenticate.st.spinner")
+        mocker.patch("streamlit_ldap_authenticator.authenticate.st.error")
+        rerun_spy = mocker.spy(st, "rerun")
+
+        auth_instance.ldap_auth.login = MagicMock(return_value=user)
+
+        # First login() call: dialog runs, stores auth_result, calls st.rerun
+        auth_instance.login(config=LoginConfig(use_dialog=True))
+
+        rerun_spy.assert_called_once()
+        # auth_result stored in session state (dialog's contribution)
+        assert session_state.get(auth_instance.session_configs.auth_result) == user
+
     def test_fragment_logout_cancel_is_observable(
         self, auth_instance, session_state, mock_cookie_manager, mocker
     ):
@@ -289,3 +320,40 @@ class TestDialogAndFragment:
         # User remains logged in (cancel was honoured)
         assert session_state.get("login_user") == {"cn": "grace"}
         mock_cookie_manager.remove.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# INV-G13 — coverage gaps: __allow_cookie_refresh exception, toDict exclusion
+# ---------------------------------------------------------------------------
+
+
+class TestAllowCookieRefresh:
+    def test_duplicate_key_exception_is_swallowed(
+        self, auth_instance, mock_cookie_manager
+    ):
+        """StreamlitDuplicateElementKey during refresh is caught; login proceeds."""
+        from streamlit.errors import StreamlitDuplicateElementKey
+
+        mock_cookie_manager.refresh.side_effect = StreamlitDuplicateElementKey("dup")
+
+        # Should not raise — exception is absorbed with a brief sleep
+        auth_instance._Authenticate__allow_cookie_refresh()  # type: ignore[attr-defined]
+
+        mock_cookie_manager.refresh.assert_called_once()
+
+    def test_no_cookie_config_returns_early(self, auth_instance):
+        """No cookie config → __allow_cookie_refresh returns without touching cookie_manager."""
+        auth_instance.cookie_configs = None
+
+        # Should not raise AttributeError even though cookie_manager is not set
+        auth_instance._Authenticate__allow_cookie_refresh()  # type: ignore[attr-defined]
+
+
+class TestLoginConfigToDict:
+    def test_use_dialog_absent_from_todict(self):
+        """use_dialog must not appear in LoginConfig.toDict() output."""
+        config = LoginConfig(use_dialog=True)
+        result = config.toDict()
+        assert "use_dialog" not in result
+        # Verify toDict() is not trivially empty — other keys are present
+        assert "busy_message" in result

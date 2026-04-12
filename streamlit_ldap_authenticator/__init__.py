@@ -3,8 +3,12 @@
 
 import logging
 
-from .authenticate import Authenticate as Authenticate, RegexDomain as RegexDomain, RegexEmail as RegexEmail
-from .configs import (
+from streamlit_ldap_authenticator.authenticate import (
+    Authenticate as Authenticate,
+    RegexDomain as RegexDomain,
+    RegexEmail as RegexEmail,
+)
+from streamlit_ldap_authenticator.configs import (
     CookieConfig as CookieConfig,
     EncryptorConfig as EncryptorConfig,
     LdapConfig as LdapConfig,
@@ -13,6 +17,9 @@ from .configs import (
     SessionStateConfig as SessionStateConfig,
     UserInfos as UserInfos,
 )
-from .ldap_authenticate import Connection as Connection, LdapAuthenticate as LdapAuthenticate
+from streamlit_ldap_authenticator.ldap_authenticate import (
+    Connection as Connection,
+    LdapAuthenticate as LdapAuthenticate,
+)
 
 logging.getLogger("streamlit_ldap_authenticator").addHandler(logging.NullHandler())
