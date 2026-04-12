@@ -1,9 +1,8 @@
 """Tests for streamlit_ldap_authenticator.authenticate.Authenticate."""
 
 import jwt
-import pytest
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import streamlit as st
 from streamlit_rsa_auth_ui import SigninEvent, SignoutEvent
@@ -16,6 +15,7 @@ from streamlit_ldap_authenticator.configs import CookieConfig
 # Helpers for accessing private (name-mangled) static methods
 # ---------------------------------------------------------------------------
 
+
 def _encode(cookie_config: CookieConfig, user: dict) -> str:
     return Authenticate._Authenticate__token_encode(cookie_config, user)  # type: ignore[attr-defined]
 
@@ -27,6 +27,7 @@ def _decode(cookie_config: CookieConfig, token) -> dict | None:
 # ---------------------------------------------------------------------------
 # AC-1.2 — Token encode/decode tests
 # ---------------------------------------------------------------------------
+
 
 class TestTokenEncodeDecode:
     def test_roundtrip_returns_original_user(self, cookie_config):
@@ -50,7 +51,10 @@ class TestTokenEncodeDecode:
     def test_invalid_signature_returns_none(self, cookie_config):
         """A token signed with a different key returns None."""
         token = jwt.encode(
-            {"user": {"cn": "alice"}, "exp_date": (datetime.now(tz=UTC) + timedelta(days=1)).timestamp()},
+            {
+                "user": {"cn": "alice"},
+                "exp_date": (datetime.now(tz=UTC) + timedelta(days=1)).timestamp(),
+            },
             "wrong-secret-key-completely-different",
             algorithm="HS256",
         )
@@ -78,6 +82,7 @@ class TestTokenEncodeDecode:
 # ---------------------------------------------------------------------------
 # AC-1.3 — login() tests
 # ---------------------------------------------------------------------------
+
 
 class TestLogin:
     def test_session_state_cache_hit_returns_user(self, auth_instance, session_state):
@@ -151,7 +156,9 @@ class TestLogin:
         mocker.patch("streamlit_ldap_authenticator.authenticate.st.spinner")
         mocker.patch("streamlit_ldap_authenticator.authenticate.st.error")
 
-        auth_instance.ldap_auth.login = MagicMock(return_value="Wrong username or password")
+        auth_instance.ldap_auth.login = MagicMock(
+            return_value="Wrong username or password"
+        )
 
         result = auth_instance.login()
 
@@ -161,6 +168,7 @@ class TestLogin:
 # ---------------------------------------------------------------------------
 # AC-1.4 — create_logout_form() tests
 # ---------------------------------------------------------------------------
+
 
 class TestLogoutForm:
     def _setup_signout(self, auth_instance, session_state, mock_cookie_manager, mocker):
@@ -206,6 +214,7 @@ class TestLogoutForm:
 # ---------------------------------------------------------------------------
 # AC-1.7 — __get_cookie() same-run characterisation
 # ---------------------------------------------------------------------------
+
 
 class TestGetCookieSameRun:
     def test_cookie_not_visible_same_run_returns_none(

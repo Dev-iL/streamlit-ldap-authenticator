@@ -200,8 +200,10 @@ class Authenticate:
                 raise CookieError(msg)
 
             return user
+        except (jwt.InvalidTokenError, CookieError):
+            return None
         except Exception as e:
-            print(f"Token decode error: {e}")
+            logger.warning("Unexpected decode error: %s", type(e).__name__)
             return None
 
     def __get_cookie(self) -> UserInfos | None:
