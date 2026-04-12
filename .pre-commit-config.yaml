@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/facebook/pyrefly-pre-commit
+    rev: 0.60.2  # Note: this is the version of the pre-commit hook, NOT the pyrefly version used for type checking
+    hooks:
+      - id: pyrefly-check
+        name: Pyrefly (type checking)
+        entry: .venv/bin/pyrefly check
+        pass_filenames: false  # Recommended to do full repo checks. However, you can change this to `true` to only check changed files
+        language: system  # Use system-installed pyrefly
+
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        stages: [ manual, pre-push, pre-commit, pre-merge-commit ]
+        types: [ python ]
+        entry: .venv/bin/pytest
+        args: [tests/]
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -6,10 +6,16 @@ import logging
 from collections.abc import Callable
 from typing import Literal
 
-from ldap3 import Connection, Entry, Server
-from ldap3.core.exceptions import LDAPException
+import ldap
+import ldap.filter
+from ldap.ldapobject import LDAPObject as Connection
 
-from streamlit_ldap_authenticator.configs import AttrDict, LdapConfig, UserInfos, UserInfoValue
+from streamlit_ldap_authenticator.configs import (
+    AttrDict,
+    LdapConfig,
+    UserInfos,
+    UserInfoValue,
+)
 from streamlit_ldap_authenticator.exceptions import ActiveDirectoryAttributeError
 
 logger = logging.getLogger("streamlit_ldap_authenticator")
@@ -34,6 +40,14 @@ class LdapAuthenticate:
         """
         self.config = LdapConfig.get_instance(config)
 
+    def __make_uri(self) -> str:
+        """Build the LDAP URI from server_path and use_ssl."""
+        uri = self.config.server_path
+        if "://" not in uri:
+            scheme = "ldaps" if self.config.use_ssl else "ldap"
+            return f"{scheme}://{uri}"
+        return uri
+
     def login(
         self,
         username: str,
@@ -41,17 +55,17 @@ class LdapAuthenticate:
         get_info: Callable[[Connection], UserInfos | None],
         additional_check: Callable[[Connection | None, UserInfos], Literal[True] | str]
         | None = None,
-    ) -> UserInfos | str | Literal[True]:
+    ) -> UserInfos | str:
         """Login to active directory.
 
         ## Arguments
-        userName: str
+        username: str
             username to log in to active directory
         password: str
             password to log in to active directory
-        getInfo: (connection: Connection) -> UserInfos | None
+        get_info: (connection: Connection) -> UserInfos | None
             Function to retrieve user information from active directory
-        additionalCheck: ((connection: Connection | None, user: UserInfos) -> (True | str)) | None
+        additional_check: ((connection: Connection | None, user: UserInfos) -> (True | str)) | None
             * Function to perform additional authentication check.
             * Function must return `True` if additional authentication is successful, otherwise must return error message
             * Passing `None` will ignore additional authentication check.
@@ -61,42 +75,40 @@ class LdapAuthenticate:
             User information if authentication is successful.
             otherwise, authentication fail message
         """
-        server = Server(
-            self.config.server_path,
-            use_ssl=self.config.use_ssl,
-            get_info="ALL",
-        )
-        conn = Connection(
-            server,
-            username,
-            password,
-            auto_bind=False,
-            auto_referrals=False,
-            raise_exceptions=False,
-        )
+        conn = ldap.initialize(self.__make_uri())
+        # pyrefly: ignore [missing-attribute]
+        conn.protocol_version = ldap.VERSION3
+        # pyrefly: ignore [missing-attribute]
+        conn.set_option(ldap.OPT_REFERRALS, 0)
+        bound = False
         try:
-            conn.bind()
-            conn.password = None
-            if conn.result["result"] != 0:
-                return "Wrong username or password"
+            conn.simple_bind_s(username, password)
+            bound = True
             user = get_info(conn)
             if user is None:
                 return f"No information found in active directory for '{username}'"
             if additional_check is None:
                 return user
-
             result = additional_check(conn, user)
             if result is True:
                 return user
             return result
-        except LDAPException as e:
+        # pyrefly: ignore [missing-attribute]
+        except ldap.INVALID_CREDENTIALS:
+            return "Wrong username or password"
+        # pyrefly: ignore [missing-attribute]
+        except ldap.LDAPError as e:
             return str(e).replace(self.config.server_path, "server")
         except Exception as e:
             logger.error("Unexpected LDAP error: %s", type(e).__name__)
             return "An unexpected error occurred during authentication"
         finally:
-            if conn.bound:
-                conn.unbind()
+            if bound:
+                try:
+                    conn.unbind_s()
+                # pyrefly: ignore [missing-attribute]
+                except ldap.LDAPError:
+                    pass
 
     def get_infos(
         self,
@@ -109,20 +121,21 @@ class LdapAuthenticate:
         conn: Connection
             Active directory connection
         filters: str | Dict[str, str]
-            * sr: filter string
+            * str: filter string
             * Dict[str, str]: Filter key value pairs
 
         ## Returns
-        UserInfos | None
-            User information if available. otherwise, `None`
+        list[UserInfos]
+            List of user information
         """
-        conn.search(
-            search_base=self.config.search_base,
-            search_filter=self.__to_filter_str(filters),
-            search_scope="SUBTREE",
-            attributes=self.config.attributes,
+        results = conn.search_s(
+            self.config.search_base,
+            # pyrefly: ignore [missing-attribute]
+            ldap.SCOPE_SUBTREE,
+            self.__to_filter_str(filters),
+            self.config.attributes,
         )
-        return self.__to_infos(conn.entries)
+        return self.__to_infos(results)
 
     def get_info(
         self,
@@ -220,20 +233,22 @@ class LdapAuthenticate:
         if type(attribute) is not list:
             msg = f"'{attribute}' is not `List` type"
             raise ActiveDirectoryAttributeError(msg)
-        length = len(attribute)
-        if length < 1:
+        if not attribute:
             return None
-        if length == 1:
-            return str(attribute[0])
-        return attribute
+        decoded = [
+            v.decode("utf-8") if isinstance(v, bytes) else str(v) for v in attribute
+        ]
+        return decoded[0] if len(decoded) == 1 else decoded
 
     def __to_info(self, entry) -> UserInfos | None:
-        if type(entry) is not Entry:
+        if not isinstance(entry, tuple) or len(entry) != 2:
             return None
-        return {
-            str(k): self.__to_value(v)
-            for k, v in entry.entry_attributes_as_dict.items()
-        }
+        _, attrs = entry
+        if not isinstance(
+            attrs, dict
+        ):  # referral entries have a non-dict second element
+            return None
+        return {k: self.__to_value(v) for k, v in attrs.items()}
 
     def __to_infos(self, entries) -> list[UserInfos]:
         """Convert entries to user information list."""
@@ -248,9 +263,10 @@ class LdapAuthenticate:
         if type(filters) is str:
             return filters
         if type(filters) is dict:
-            search_filters = [f"({k}={v})" for k, v in filters.items()]
-            return f"(&{''.join(search_filters)})"
+            parts = [
+                f"({k}={ldap.filter.escape_filter_chars(v)})"
+                for k, v in filters.items()
+            ]
+            return f"(&{''.join(parts)})"
         msg = "Expect 'filters' argument to be either str or Dict[str, str] type"
-        raise TypeError(
-            msg,
-        )
+        raise TypeError(msg)
