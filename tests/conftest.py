@@ -43,7 +43,9 @@ def mock_cookie_manager():
 
 
 @pytest.fixture
-def auth_instance(ldap_config, cookie_config, session_state, mock_cookie_manager, mocker):
+def auth_instance(
+    ldap_config, cookie_config, session_state, mock_cookie_manager, mocker
+):
     """Authenticate instance with all external dependencies mocked."""
     mocker.patch(
         "streamlit_ldap_authenticator.authenticate.CookieController",
@@ -52,5 +54,8 @@ def auth_instance(ldap_config, cookie_config, session_state, mock_cookie_manager
     mocker.patch("streamlit_ldap_authenticator.authenticate.authUI")
     mocker.patch.object(st, "session_state", session_state)
     mocker.patch("time.sleep")
+    # Run @st.fragment / @st.dialog decorated inner functions normally in tests.
+    mocker.patch.object(st, "fragment", side_effect=lambda f: f)
+    mocker.patch.object(st, "dialog", side_effect=lambda title, **_: lambda f: f)
 
     return Authenticate(ldap_config, cookie_configs=cookie_config)

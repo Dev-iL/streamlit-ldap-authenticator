@@ -42,6 +42,7 @@ class LoginConfig(SigninFormConfig):
         remember: CheckboxConfig | str | Object | None = None,
         forgot: ButtonConfig | str | Object | None = None,
         args: Object | None = None,
+        use_dialog: bool = False,
     ) -> None:
         super().__init__(
             form_type,
@@ -60,6 +61,7 @@ class LoginConfig(SigninFormConfig):
         )
         self.busy_message = busy_message
         self.error_icon = error_icon
+        self.use_dialog = use_dialog
 
     def toDict(self) -> Object:
         config = super().toDict()
