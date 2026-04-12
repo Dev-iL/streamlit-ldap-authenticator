@@ -50,9 +50,6 @@ def auth_instance(ldap_config, cookie_config, session_state, mock_cookie_manager
         return_value=mock_cookie_manager,
     )
     mocker.patch("streamlit_ldap_authenticator.authenticate.authUI")
-    # Patch both the module-level 'ss' alias and st.session_state so they
-    # both refer to the same plain dict throughout each test.
-    mocker.patch("streamlit_ldap_authenticator.authenticate.ss", new=session_state)
     mocker.patch.object(st, "session_state", session_state)
     mocker.patch("time.sleep")
 
