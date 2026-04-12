@@ -2,13 +2,13 @@
 
 import jwt
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import streamlit as st
 from streamlit_rsa_auth_ui import SigninEvent, SignoutEvent
 
 from streamlit_ldap_authenticator.authenticate import Authenticate
-from streamlit_ldap_authenticator.configs import CookieConfig
+from streamlit_ldap_authenticator.configs import CookieConfig, LoginConfig
 
 
 # ---------------------------------------------------------------------------
@@ -95,12 +95,17 @@ class TestLogin:
         assert result == user
 
     def test_cookie_cache_hit_returns_user(
-        self, auth_instance, cookie_config, session_state, mock_cookie_manager
+        self, auth_instance, cookie_config, session_state, mocker
     ):
         """Valid cookie → user returned without showing the login form."""
         user = {"cn": "bob", "mail": "bob@test.com"}
         token = _encode(cookie_config, user)
-        mock_cookie_manager.get.return_value = token
+        mocker.patch.object(
+            type(st.context),
+            "cookies",
+            new_callable=PropertyMock,
+            return_value={cookie_config.name: token},
+        )
 
         result = auth_instance.login()
 
@@ -232,3 +237,50 @@ class TestGetCookieSameRun:
         result = auth_instance._Authenticate__get_cookie()  # type: ignore[attr-defined]
 
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# AC-5.7 — use_dialog=True auth and fragment logout observable results
+# ---------------------------------------------------------------------------
+
+
+class TestDialogAndFragment:
+    def test_dialog_auth_result_in_session_state_returns_user(
+        self, auth_instance, session_state
+    ):
+        """use_dialog=True: after dialog stores result in session state, subsequent
+        login() call picks it up and returns the authenticated user (R-6 scenario).
+        """
+        user = {"cn": "frank", "mail": "frank@test.com"}
+        # Simulate what the dialog stores after successful auth
+        session_state[auth_instance.session_configs.auth_result] = user
+
+        result = auth_instance.login(config=LoginConfig(use_dialog=True))
+
+        assert result == user
+        # auth_result key is cleaned up and user is stored in the user key
+        assert auth_instance.session_configs.auth_result not in session_state
+        assert session_state.get(auth_instance.session_configs.user) == user
+
+    def test_fragment_logout_cancel_is_observable(
+        self, auth_instance, session_state, mock_cookie_manager, mocker
+    ):
+        """@st.fragment-wrapped create_logout_form: a cancel callback prevents logout
+        and the caller can observe the user is still logged in.
+        """
+        session_state["login_user"] = {"cn": "grace"}
+        mock_cookie_manager.getAll.return_value = {"test_cookie": "some_token"}
+
+        signout_event = SignoutEvent()
+        auth_instance.ui.signoutForm.return_value = signout_event
+        mocker.patch(
+            "streamlit_ldap_authenticator.authenticate.getEvent",
+            return_value=signout_event,
+        )
+        mocker.patch("streamlit_ldap_authenticator.authenticate.st.spinner")
+
+        auth_instance.create_logout_form(callback=lambda event: "cancel")
+
+        # User remains logged in (cancel was honoured)
+        assert session_state.get("login_user") == {"cn": "grace"}
+        mock_cookie_manager.remove.assert_not_called()

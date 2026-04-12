@@ -210,7 +210,7 @@ class Authenticate:
         if self.cookie_configs is None:
             return None
 
-        token = self.cookie_manager.get(self.cookie_configs.name)
+        token = st.context.cookies.get(self.cookie_configs.name)
         return self.__token_decode(self.cookie_configs, token)
 
     def __set_cookie(self, user: UserInfos | None) -> None:
@@ -405,6 +405,15 @@ class Authenticate:
             User information if authentication is successful.
             otherwise, `None`
         """
+        # Dialog / fragment auth-result pickup: must precede authUI form rendering
+        auth_key = self.session_configs.auth_result
+        if auth_key in st.session_state and type(st.session_state[auth_key]) is dict:
+            user = st.session_state.pop(auth_key)
+            self.__set_user(user)
+            self.__allow_cookie_refresh()
+            self.__set_cookie(user)
+            return user
+
         # check user authentication if it is found in streamlit session_state
         user = self.__get_user()
         if self.__check_reauthentication(user, additional_check):
@@ -418,22 +427,38 @@ class Authenticate:
             return user
 
         # ask user to log in
-        user = self.__create_login_form(
-            additional_check,
-            get_login_user_name,
-            get_info,
-            config,
-            callback,
-        )
-        if type(user) is not dict:
+        use_dialog = config.use_dialog if isinstance(config, LoginConfig) else False
+
+        if use_dialog:
+
+            @st.dialog("Login")
+            def _login_dialog():
+                result = self.__create_login_form(
+                    additional_check, get_login_user_name, get_info, config, callback
+                )
+                if type(result) is dict:
+                    st.session_state[auth_key] = result
+                    st.rerun()
+
+            _login_dialog()
             return None
-        self.__set_user(user)
-        self.__allow_cookie_refresh()
-        self.__set_cookie(user)
-        try:
-            return user
-        finally:
-            st.rerun()
+        else:
+
+            @st.fragment
+            def _login_form():
+                result = self.__create_login_form(
+                    additional_check, get_login_user_name, get_info, config, callback
+                )
+                if type(result) is dict:
+                    self.__set_user(result)
+                    self.__allow_cookie_refresh()
+                    self.__set_cookie(result)
+                    st.rerun(scope="app")
+
+            _login_form()
+            # In test context (st.rerun is no-op, st.fragment is pass-through),
+            # return user if form auth just succeeded synchronously.
+            return self.__get_user()
 
     def __allow_cookie_refresh(self):
         """Allow cookie refresh to avoid duplicate element key error"""
@@ -485,30 +510,35 @@ class Authenticate:
             - Return `'cancel'` will stop the logout process.
             - Return `None` will continue logout process.
         """
-        (config, busy_message, sleep_sec) = self.__get_logout_config(config)
 
-        # Create form
-        result = self.ui.signoutForm(configs=config)
-        if result is None:
-            return
+        @st.fragment
+        def _logout():
+            (config_dict, busy_message, sleep_sec) = self.__get_logout_config(config)
 
-        if self.encryptor is not None and type(result) is str:
-            result = self.encryptor.decrypt(result)
-        event = getEvent(result)
-        if type(event) is not SignoutEvent:
-            return
+            # Create form
+            result = self.ui.signoutForm(configs=config_dict)
+            if result is None:
+                return
 
-        with st.spinner(busy_message):
-            if callback is not None:
-                result = callback(event)
-                if result == "cancel":
-                    return
+            if self.encryptor is not None and type(result) is str:
+                result = self.encryptor.decrypt(result)
+            event = getEvent(result)
+            if type(event) is not SignoutEvent:
+                return
 
-            self.__set_user(None)
-            self.__delete_cookie()
-            # give sometime for the browser cookie to get deleted
-            time.sleep(sleep_sec)
-            st.rerun()
+            with st.spinner(busy_message):
+                if callback is not None:
+                    result = callback(event)
+                    if result == "cancel":
+                        return
+
+                self.__set_user(None)
+                self.__delete_cookie()
+                # give sometime for the browser cookie to get deleted
+                time.sleep(sleep_sec)
+                st.rerun(scope="app")
+
+        _logout()
 
     # Default decoding of login username and get user information from active directory
     def get_info(self, conn: Connection, username: str) -> UserInfos | None:
