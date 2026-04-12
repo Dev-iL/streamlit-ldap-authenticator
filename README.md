@@ -467,60 +467,6 @@ Now run it to open the app!
 streamlit run list_login.py
 ```
 
-## Change Log
-
-### Version 0.0.4
-
-- Initial release
-
-### Version 0.0.5
-
-- default use_ssl for ldap connection to `True`
-- Added use_ssl configuration in `LdapConfig`
-
-### Version 0.0.6
-
-- fix page application not working when auto-renewal for cookie config is configured.
-
-### Version 0.1.0
-
-- Add encryption module
-- Change user interface
-- More customizable form config
-- Remove LoginFormConfig and LogoutFormConfig
-
-### Version 0.1.1
-
-- Add pyjwt as a requirement
-
-### Version 0.2.0
-
-- Add callback argument in login and logout
-
-### Version 0.2.1
-
-- Fix cannot log in if encryptor module is provided.
-- Fix cookie auto-renewal not working when no additionalCheck parameter is provided.
-
-### Version 0.2.2
-
-- Fix misleading error message of "Wrong username or password" when there is an exception occured during ldap connection
-
-### Version 0.2.3
-
-- Enhance security by clearing password from Connection object after bind.
-
-### Version 0.2.4
-
-- Fix 'no attribute in signinevent' when cookie option is disabled.
-
-### Version 0.2.5
-
-- Add Optional delay_sec in cookie config for set and del cookie.
-
-### Version 0.2.6
-
-- Fix `expiry_days` and `delay_sec` is not parse correctly from secrets.toml in CookieConfig.
 
 [pypi_badge]: https://img.shields.io/pypi/v/streamlit-ldap-authenticator.svg
 [pypi_link]: https://pypi.org/project/streamlit-ldap-authenticator

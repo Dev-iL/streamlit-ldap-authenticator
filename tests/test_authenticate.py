@@ -179,7 +179,12 @@ class TestLogoutForm:
     def _setup_signout(self, auth_instance, session_state, mock_cookie_manager, mocker):
         """Common setup: user is logged in, UI emits a SignoutEvent."""
         session_state["login_user"] = {"cn": "alice"}
-        mock_cookie_manager.getAll.return_value = {"test_cookie": "some_token"}
+        mocker.patch.object(
+            type(st.context),
+            "cookies",
+            new_callable=PropertyMock,
+            return_value={"test_cookie": "some_token"},
+        )
 
         signout_event = SignoutEvent()
         auth_instance.ui.signoutForm.return_value = signout_event

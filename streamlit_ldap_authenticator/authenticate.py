@@ -147,9 +147,9 @@ class Authenticate:
         str
             The JWT cookie for passwordless reauthentication.
         """
-        exp_date = datetime.now(tz=UTC) + timedelta(days=cookie_configs.expiry_days)
+        expiry = datetime.now(tz=UTC) + timedelta(days=cookie_configs.expiry_days)
         return jwt.encode(
-            {"user": user, "exp": exp_date},
+            {"user": user, "exp": expiry},
             cookie_configs.key,
             algorithm="HS256",
         )
@@ -231,8 +231,8 @@ class Authenticate:
             return
 
         token = self.__token_encode(self.cookie_configs, user)
-        exp_date = datetime.now() + timedelta(days=self.cookie_configs.expiry_days)
-        self.cookie_manager.set(self.cookie_configs.name, token, expires=exp_date)
+        expiry = datetime.now() + timedelta(days=self.cookie_configs.expiry_days)
+        self.cookie_manager.set(self.cookie_configs.name, token, expires=expiry)
         time.sleep(self.cookie_configs.delay_sec)
 
     def __delete_cookie(self) -> None:
@@ -242,8 +242,7 @@ class Authenticate:
         if self.cookie_configs is None:
             return
 
-        cookies = self.cookie_manager.getAll()
-        if self.cookie_configs.name in cookies:
+        if self.cookie_configs.name in st.context.cookies:
             self.cookie_manager.remove(self.cookie_configs.name)
             time.sleep(self.cookie_configs.delay_sec)
 

@@ -54,3 +54,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   bugs when session state was replaced between reruns.
 - `__init__.py` re-exports corrected so static analysis tools (mypy, pyright) can
   resolve all exported symbols without false-positive "not exported" errors.
+
+## [0.2.6]
+
+- Fix `expiry_days` and `delay_sec` is not parsed correctly from secrets.toml in
+  `CookieConfig`.
+
+## [0.2.5]
+
+- Add optional `delay_sec` in cookie config for set and delete cookie.
+
+## [0.2.4]
+
+- Fix `no attribute in signinevent` when cookie option is disabled.
+
+## [0.2.3]
+
+- Enhance security by clearing password from `Connection` object after bind.
+
+## [0.2.2]
+
+- Fix misleading error message of "Wrong username or password" when there is an
+  exception during LDAP connection.
+
+## [0.2.1]
+
+- Fix cannot log in if encryptor module is provided.
+- Fix cookie auto-renewal not working when no `additionalCheck` parameter is
+  provided.
+
+## [0.2.0]
+
+- Add callback argument in `login` and `logout`.
+
+## [0.1.1]
+
+- Add `pyjwt` as a requirement.
+
+## [0.1.0]
+
+- Add encryption module.
+- Change user interface.
+- More customizable form config.
+- Remove `LoginFormConfig` and `LogoutFormConfig`.
+
+## [0.0.6]
+
+- Fix page application not working when auto-renewal for cookie config is
+  configured.
+
+## [0.0.5]
+
+- Default `use_ssl` for LDAP connection changed to `True`.
+- Added `use_ssl` configuration in `LdapConfig`.
+
+## [0.0.4]
+
+- Initial release.
