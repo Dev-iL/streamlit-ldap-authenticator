@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "streamlit-ldap-authenticator"
-version = "0.3.0"
+version = "0.3.1"
 description = "Authenticate using ldap"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "streamlit >= 1.37",
-    "python-ldap >= 3.4.5",
+    "python-ldap == 3.4.5",
     "pyjwt >= 2.8.0",
     "streamlit-cookies-controller >= 0.0.3",
     "streamlit-rsa-auth-ui >= 1.1.1"
@@ -38,3 +38,11 @@ dev = [
 
 [tool.pytest]
 testpaths = ["tests"]
+
+[tool.uv]
+override-dependencies = [
+    "python-ldap @ https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp314-cp314-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.14'",
+    "python-ldap @ https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp313-cp313-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.13'",
+    "python-ldap @ https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.12'",
+    "python-ldap @ https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp311-cp311-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.11'",
+]

@@ -1,14 +1,22 @@
 # Author    : Nathan Chen
 # Date      : 04-Apr-2024
 
+from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-import ldap
-import ldap.filter
-from ldap.ldapobject import LDAPObject as Connection
+if TYPE_CHECKING:
+    from ldap.ldapobject import LDAPObject as Connection
+
+try:
+    from ldap.ldapobject import LDAPObject as Connection
+
+    _LDAP_AVAILABLE = True
+except ImportError:
+    Connection = Any  # type: ignore[assignment,misc]
+    _LDAP_AVAILABLE = False
 
 from streamlit_ldap_authenticator.configs import (
     AttrDict,
@@ -38,6 +46,14 @@ class LdapAuthenticate:
         config: LdapConfig | dict | streamlit.runtime.secrets.AttrDict
             Config for authentication using active directory
         """
+        if not _LDAP_AVAILABLE:
+            raise ImportError(
+                "python-ldap is required for LDAP authentication but is not installed.\n"
+                "Install it with: pip install python-ldap\n"
+                "Note: python-ldap is a C extension and requires system LDAP libraries "
+                "(e.g. libldap-dev on Debian/Ubuntu). Pre-built wheels for your "
+                "platform/Python version may not be available."
+            )
         self.config = LdapConfig.get_instance(config)
 
     def __make_uri(self) -> str:
@@ -75,6 +91,8 @@ class LdapAuthenticate:
             User information if authentication is successful.
             otherwise, authentication fail message
         """
+        import ldap
+
         conn = ldap.initialize(self.__make_uri())
         # pyrefly: ignore [missing-attribute]
         conn.protocol_version = ldap.VERSION3
@@ -128,6 +146,8 @@ class LdapAuthenticate:
         list[UserInfos]
             List of user information
         """
+        import ldap
+
         results = conn.search_s(
             self.config.search_base,
             # pyrefly: ignore [missing-attribute]
@@ -263,6 +283,8 @@ class LdapAuthenticate:
         if type(filters) is str:
             return filters
         if type(filters) is dict:
+            import ldap.filter
+
             parts = [
                 f"({k}={ldap.filter.escape_filter_chars(v)})"
                 for k, v in filters.items()

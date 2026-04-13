@@ -1,6 +1,7 @@
 # Author    : Nathan Chen
 # Date      : 27-Apr-2024
 
+from __future__ import annotations
 
 import logging
 import re
