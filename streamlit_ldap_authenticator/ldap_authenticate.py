@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -64,6 +65,26 @@ class LdapAuthenticate:
             return f"{scheme}://{uri}"
         return uri
 
+    def __initialize_connection(self) -> Connection:
+        import ldap
+
+        conn = ldap.initialize(self.__make_uri())
+        try:
+            # pyrefly: ignore [missing-attribute]
+            conn.protocol_version = ldap.VERSION3
+            # pyrefly: ignore [missing-attribute]
+            conn.set_option(ldap.OPT_REFERRALS, 0)
+        except Exception as exc:
+            try:
+                conn.unbind_s()
+            except Exception as cleanup_exc:  # noqa: BLE001 - cleanup is best effort
+                logger.error(
+                    "Unexpected LDAP cleanup error: %s", type(cleanup_exc).__name__
+                )
+            logger.error("LDAP connection setup error: %s", type(exc).__name__)
+            raise
+        return conn
+
     def login(
         self,
         username: str,
@@ -93,13 +114,10 @@ class LdapAuthenticate:
         """
         import ldap
 
-        conn = ldap.initialize(self.__make_uri())
-        # pyrefly: ignore [missing-attribute]
-        conn.protocol_version = ldap.VERSION3
-        # pyrefly: ignore [missing-attribute]
-        conn.set_option(ldap.OPT_REFERRALS, 0)
+        conn = None
         bound = False
         try:
+            conn = self.__initialize_connection()
             conn.simple_bind_s(username, password)
             bound = True
             user = get_info(conn)
@@ -117,16 +135,87 @@ class LdapAuthenticate:
         # pyrefly: ignore [missing-attribute]
         except ldap.LDAPError as e:
             return str(e).replace(self.config.server_path, "server")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - preserve the low-level safe API
             logger.error("Unexpected LDAP error: %s", type(e).__name__)
             return "An unexpected error occurred during authentication"
         finally:
-            if bound:
+            if bound and conn is not None:
                 try:
                     conn.unbind_s()
                 # pyrefly: ignore [missing-attribute]
                 except ldap.LDAPError:
                     pass
+
+    def lookup(
+        self,
+        identifier: str,
+        get_info: Callable[[Connection, str], UserInfos | None],
+        additional_check: Callable[[Connection, UserInfos], Literal[True] | str]
+        | None = None,
+    ) -> UserInfos | str:
+        """Find an OIDC identity using anonymous LDAP, then service credentials."""
+        import ldap
+
+        def attempt(username: str, password: str):
+            conn = None
+            try:
+                conn = self.__initialize_connection()
+                conn.simple_bind_s(username, password)
+                user = get_info(conn, identifier)
+                if user is None:
+                    return "no_record", None
+                if additional_check is not None:
+                    try:
+                        result = additional_check(conn, user)
+                    except Exception as exc:  # noqa: BLE001 - isolate application callbacks
+                        logger.error(
+                            "Unexpected LDAP authorization error: %s",
+                            type(exc).__name__,
+                        )
+                        return "denied", "Authorization failed"
+                    if result is not True:
+                        return "denied", result if isinstance(
+                            result, str
+                        ) else "Authorization failed"
+                return "success", user
+            # pyrefly: ignore [missing-attribute]
+            except ldap.LDAPError as exc:
+                logger.error("LDAP lookup error: %s", type(exc).__name__)
+                return "ldap_error", None
+            except Exception as exc:  # noqa: BLE001 - return a safe lookup failure
+                logger.error("Unexpected LDAP lookup error: %s", type(exc).__name__)
+                return "error", "An unexpected LDAP error occurred"
+            finally:
+                if conn is not None:
+                    try:
+                        conn.unbind_s()
+                    except Exception as exc:  # noqa: BLE001 - cleanup is best effort
+                        logger.error(
+                            "Unexpected LDAP cleanup error: %s", type(exc).__name__
+                        )
+
+        status, result = attempt("", "")
+        if status == "success" or status in {"error", "denied"}:
+            return result
+
+        username = os.environ.get("LDAP_SERVICE_ACCOUNT_USERNAME")
+        password = os.environ.get("LDAP_SERVICE_ACCOUNT_PASSWORD")
+        if username and password:
+            service_status, service_result = attempt(username, password)
+            if service_status == "success" or service_status in {"error", "denied"}:
+                return service_result
+            return (
+                "User not found"
+                if service_status == "no_record"
+                else "LDAP lookup failed"
+            )
+        if username is None and password is None:
+            return (
+                "User not found"
+                if status == "no_record"
+                else "LDAP lookup configuration is incomplete"
+            )
+        return "LDAP lookup configuration is incomplete"
 
     def get_infos(
         self,

@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "streamlit-ldap-authenticator"
-version = "0.3.1"
+version = "0.4.0"
 description = "Authenticate using ldap"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -18,11 +18,8 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 dependencies = [
-    "streamlit >= 1.37",
+    "streamlit[auth] >= 1.42",
     "python-ldap == 3.4.5",
-    "pyjwt >= 2.8.0",
-    "streamlit-cookies-controller >= 0.0.3",
-    "streamlit-rsa-auth-ui >= 1.1.1"
 ]
 
 [project.urls]

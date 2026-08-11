@@ -1,41 +1,17 @@
-# Author    : Nathan Chen
-# Date      : 16-Feb-2024
+"""Exceptions raised by LDAP data conversion."""
 
 
 class DeprecationError(Exception):
-    """Exceptions raised for possible deprecation.
-
-    ## Attributes
-    message: str
-        The custom error message to display.
-    """
+    """Exception used for deprecated API paths."""
 
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
 class ActiveDirectoryAttributeError(Exception):
-    """Exceptions raised for Active Directory attribute error.
-
-    ## Attributes
-    message: str
-        The custom error message to display.
-    """
+    """Raised when an Active Directory attribute has an unexpected shape."""
 
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__(self.message)
-
-
-class CookieError(Exception):
-    """Exceptions raised for decode cookie.
-
-    ## Attributes
-    message: str
-        The custom error message to display.
-    """
-
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)

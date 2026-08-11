@@ -13,6 +13,8 @@ After the fix:
 
 import sys
 from contextlib import contextmanager
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -30,9 +32,7 @@ def _ldap_blocked():
     to_evict = [
         k
         for k in sys.modules
-        if k == "ldap"
-        or k.startswith("ldap.")
-        or k.startswith("streamlit_ldap_authenticator")
+        if k == "ldap" or k.startswith(("ldap.", "streamlit_ldap_authenticator"))
     ]
     for k in to_evict:
         saved[k] = sys.modules.pop(k)
@@ -45,11 +45,7 @@ def _ldap_blocked():
         yield
     finally:
         for k in list(sys.modules):
-            if (
-                k == "ldap"
-                or k.startswith("ldap.")
-                or k.startswith("streamlit_ldap_authenticator")
-            ):
+            if k == "ldap" or k.startswith(("ldap.", "streamlit_ldap_authenticator")):
                 del sys.modules[k]
         sys.modules.update(saved)
 
@@ -64,8 +60,8 @@ def test_ldap_authenticate_raises_import_error_without_python_ldap():
     """LdapAuthenticate.__init__ must raise ImportError (not ModuleNotFoundError
     buried in login()) when python-ldap is unavailable."""
     with _ldap_blocked():
-        from streamlit_ldap_authenticator.ldap_authenticate import LdapAuthenticate
         from streamlit_ldap_authenticator.configs import LdapConfig
+        from streamlit_ldap_authenticator.ldap_authenticate import LdapAuthenticate
 
         config = LdapConfig(
             server_path="ldap://test-server:389",
@@ -75,3 +71,39 @@ def test_ldap_authenticate_raises_import_error_without_python_ldap():
         )
         with pytest.raises(ImportError, match="python-ldap"):
             LdapAuthenticate(config)
+
+
+def test_oidc_only_constructor_and_get_info_are_available_without_ldap():
+    with _ldap_blocked():
+        import streamlit as st
+
+        from streamlit_ldap_authenticator import Authenticate
+
+        user = SimpleNamespace(is_logged_in=True, to_dict=lambda: {"sub": "00u123"})
+        with patch.object(st, "user", user), patch.object(st, "error") as error:
+            auth = Authenticate()
+            assert auth.ldap_auth is None
+            assert auth.login(get_info=lambda *_args: {}) is None
+            error.assert_called_once()
+
+
+def test_public_exports_match_oidc_surface():
+    import streamlit_ldap_authenticator as package
+
+    assert set(package.__all__) == {
+        "Authenticate",
+        "LdapConfig",
+        "UserInfos",
+        "Connection",
+        "LdapAuthenticate",
+        "RegexDomain",
+        "RegexEmail",
+    }
+    for removed in (
+        "CookieConfig",
+        "EncryptorConfig",
+        "LoginConfig",
+        "LogoutConfig",
+        "SessionStateConfig",
+    ):
+        assert not hasattr(package, removed)

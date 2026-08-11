@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — 2026-08-10
+
+### Changed
+
+- **Breaking:** authentication now uses Streamlit's native Okta OIDC flow;
+  custom login forms, JWT cookies, encryption, session-state authentication,
+  and logout fragments were removed.
+- Streamlit now requires the `auth` extra at `>= 1.42`.
+- Optional LDAP enrichment tries anonymous bind first and can fall back to
+  `LDAP_SERVICE_ACCOUNT_USERNAME` and `LDAP_SERVICE_ACCOUNT_PASSWORD`.
+
+### Removed
+
+- `pyjwt`, `streamlit-cookies-controller`, and `streamlit-rsa-auth-ui`.
+- `CookieConfig`, `EncryptorConfig`, `LoginConfig`, `LogoutConfig`, and
+  `SessionStateConfig` from the public API.
+
 ## [0.3.0] — 2026-04-12
 
 ### Added
