@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -14,6 +14,7 @@ resolution-markers = [
 
 [manifest]
 overrides = [
+    { name = "python-ldap", marker = "sys_platform != 'win32'", specifier = "==3.4.5" },
     { name = "python-ldap", marker = "python_full_version == '3.11.*' and sys_platform == 'win32'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp311-cp311-win_amd64.whl" },
     { name = "python-ldap", marker = "python_full_version == '3.12.*' and sys_platform == 'win32'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" },
     { name = "python-ldap", marker = "python_full_version == '3.13.*' and sys_platform == 'win32'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp313-cp313-win_amd64.whl" },
@@ -693,7 +694,7 @@ name = "pyasn1-modules"
 version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyasn1", marker = "sys_platform == 'win32'" },
+    { name = "pyasn1" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e9/e6/78ebbb10a8c8e4b61a59249394a4a594c1a7af95593dc933a349c8d00964/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6", size = 307892, upload-time = "2025-03-28T02:41:22.17Z" }
 wheels = [
@@ -791,13 +792,29 @@ wheels = [
 [[package]]
 name = "python-ldap"
 version = "3.4.5"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.14' and sys_platform == 'emscripten'",
+    "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0c/88/8d2797decc42e1c1cdd926df4f005e938b0643d0d1219c08c2b5ee8ae0c0/python_ldap-3.4.5.tar.gz", hash = "sha256:b2f6ef1c37fe2c6a5a85212efe71311ee21847766a7d45fcb711f3b270a5f79a", size = 388482, upload-time = "2025-10-10T20:00:39.06Z" }
+
+[[package]]
+name = "python-ldap"
+version = "3.4.5"
 source = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp311-cp311-win_amd64.whl" }
 resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'win32'",
 ]
 dependencies = [
-    { name = "pyasn1", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
-    { name = "pyasn1-modules", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
 ]
 wheels = [
     { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp311-cp311-win_amd64.whl", hash = "sha256:4d4d033ae7b7dc9af1277208bc2103f018a8b28e365024ba8d5942b94481040c" },
@@ -817,8 +834,8 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
 ]
 dependencies = [
-    { name = "pyasn1", marker = "python_full_version == '3.12.*' and sys_platform == 'win32'" },
-    { name = "pyasn1-modules", marker = "python_full_version == '3.12.*' and sys_platform == 'win32'" },
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
 ]
 wheels = [
     { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl", hash = "sha256:1f4d2eb8412780d58771342c29fdae241fee824bfb80d62a2ceb321b4f831d3a" },
@@ -838,8 +855,8 @@ resolution-markers = [
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
 ]
 dependencies = [
-    { name = "pyasn1", marker = "python_full_version == '3.13.*' and sys_platform == 'win32'" },
-    { name = "pyasn1-modules", marker = "python_full_version == '3.13.*' and sys_platform == 'win32'" },
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
 ]
 wheels = [
     { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp313-cp313-win_amd64.whl", hash = "sha256:69328573af369664e3e5f560b4e202b6d80197e5922a6a6dfc18cc2b82134c3a" },
@@ -859,8 +876,8 @@ resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
 ]
 dependencies = [
-    { name = "pyasn1", marker = "python_full_version >= '3.14' and sys_platform == 'win32'" },
-    { name = "pyasn1-modules", marker = "python_full_version >= '3.14' and sys_platform == 'win32'" },
+    { name = "pyasn1" },
+    { name = "pyasn1-modules" },
 ]
 wheels = [
     { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp314-cp314-win_amd64.whl", hash = "sha256:730309799968de711d29f4368a11b0b8514091b98411bbeb2ef3bad87ceb0908" },
@@ -1082,10 +1099,11 @@ wheels = [
 
 [[package]]
 name = "streamlit-ldap-authenticator"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "pyjwt" },
+    { name = "python-ldap", version = "3.4.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'win32'" },
     { name = "python-ldap", version = "3.4.5", source = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp311-cp311-win_amd64.whl" }, marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
     { name = "python-ldap", version = "3.4.5", source = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" }, marker = "python_full_version == '3.12.*' and sys_platform == 'win32'" },
     { name = "python-ldap", version = "3.4.5", source = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp313-cp313-win_amd64.whl" }, marker = "python_full_version == '3.13.*' and sys_platform == 'win32'" },
